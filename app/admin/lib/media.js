@@ -16,7 +16,7 @@ export async function listImages(limit) {
     mongooseConnect();
     
     try {
-        const images = await Media.find().limit(limit).exec();
+        const images = await Media.find().sort({createdAt: -1}).limit(limit).exec();
         return images;
     } catch (error) {
         // Handle any errors that occur during the search

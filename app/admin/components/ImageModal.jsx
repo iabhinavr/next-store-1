@@ -10,21 +10,30 @@ export default function ImageModal({ showImageModal, setShowImageModal }) {
     const [statusColor, setStatusColor] = useState('');
     const [images, setImages] = useState([]);
 
-    useEffect(() => {
+    async function getImages() {
+        const response = await fetch("/api/images?limit=15");
 
-        async function getImages() {
-            const response = await fetch("/api/images?limit=5");
+        const result = await response.json();
 
-            const result = await response.json();
-
-            if(result?.images?.length > 0) {
-                setImages(result.images);
-            }
+        if(result?.images?.length > 0) {
+            setImages(result.images);
         }
+    }
+
+    useEffect(() => {
 
         getImages();
 
     }, []);
+
+    useEffect(() => {
+
+        if(uploadedFile) {
+            console.log('calling getimages...');
+            getImages();
+        }
+        
+    }, [uploadedFile])
 
     async function closeImageModalOnClick(ev) {
         ev.preventDefault();
@@ -66,12 +75,17 @@ export default function ImageModal({ showImageModal, setShowImageModal }) {
                 setStatusColor('bg-red-600 border-red-400');
                 break;
         }
+
+        setTimeout(() => {
+            setUploadStatus(false);
+            setUploadedFile(false);
+        }, 2500)
     }
 
     return (
         <>
             {showImageModal && <div className="fixed inset-0 flex items-center justify-center left-0 w-screen h-screen z-10 bg-slate-900/75 p-10 ">
-                <div className="modal-box w-full h-full bg-slate-700 rounded-lg">
+                <div className="modal-box w-full h-full bg-slate-700 rounded-lg overflow-scroll">
                     <div className="modal-header flex items-center justify-between py-3 px-4 border-b border-b-slate-400">
                         <h2 className="text-2xl">Add Images</h2>
                         <button onClick={closeImageModalOnClick}>[X]</button>
@@ -98,12 +112,12 @@ export default function ImageModal({ showImageModal, setShowImageModal }) {
                         }
 
                     </div>
-                    <div className="modal-images-area">
-                        <ul className="grid grid-cols-4">
+                    <div className="modal-images-area py-3 px-4">
+                        <ul className="grid grid-cols-5 gap-3">
                             {
                                 images.map((image) => (
-                                    <li key={image._id}>
-                                        <img src={`https://next-store-1.blr1.cdn.digitaloceanspaces.com/${image.fileName}`} alt="" />
+                                    <li key={image._id} className="h-40 object-cover">
+                                        <img className="object-cover object-center h-full w-full" src={`https://next-store-1.blr1.cdn.digitaloceanspaces.com/thumbnails/${image.webpPath}`} alt="" />
                                     </li>
                                 ))
                             }
