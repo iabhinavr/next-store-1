@@ -1,0 +1,31 @@
+{
+  "name": "next-store-1",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@auth/mongodb-adapter": "^2.0.2",
+    "@aws-sdk/client-s3": "^3.433.0",
+    "mongodb": "^6.1.0",
+    "mongoose": "^7.6.3",
+    "multiparty": "^4.2.3",
+    "next": "13.5.5",
+    "next-auth": "^4.24.3",
+    "react": "^18",
+    "react-dom": "^18",
+    "sharp": "^0.32.6"
+  },
+  "devDependencies": {
+    "@types/react": "18.2.31",
+    "autoprefixer": "^10",
+    "eslint": "^8",
+    "eslint-config-next": "13.5.5",
+    "postcss": "^8",
+    "tailwindcss": "^3"
+  }
+}
