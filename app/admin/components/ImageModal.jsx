@@ -9,6 +9,7 @@ export default function ImageModal({ showImageModal, setShowImageModal }) {
     const [uploadMessage, setUploadMessage] = useState('');
     const [statusColor, setStatusColor] = useState('');
     const [images, setImages] = useState([]);
+    const [selectedImages, setSelectedImages] = useState([]);
 
     async function getImages() {
         const response = await fetch("/api/images?limit=15");
@@ -35,9 +36,12 @@ export default function ImageModal({ showImageModal, setShowImageModal }) {
         
     }, [uploadedFile])
 
+    useEffect(() => {
+        console.log(selectedImages);
+    }, [selectedImages])
+
     async function closeImageModalOnClick(ev) {
         ev.preventDefault();
-
         setShowImageModal(false);
     }
 
@@ -82,6 +86,14 @@ export default function ImageModal({ showImageModal, setShowImageModal }) {
         }, 2500)
     }
 
+    async function toggleSelect(ev) {
+        const imageId = ev.currentTarget.getAttribute('data-image-id');
+
+        const newSelectedImages = selectedImages.includes(imageId) ? selectedImages.filter(item => item !== imageId) : [...selectedImages, imageId];
+
+        setSelectedImages(newSelectedImages);
+    }
+
     return (
         <>
             {showImageModal && <div className="fixed inset-0 flex items-center justify-center left-0 w-screen h-screen z-10 bg-slate-900/75 p-10 ">
@@ -116,7 +128,7 @@ export default function ImageModal({ showImageModal, setShowImageModal }) {
                         <ul className="grid grid-cols-5 gap-3">
                             {
                                 images.map((image) => (
-                                    <li key={image._id} className="h-40 object-cover">
+                                    <li data-image-id={image._id} onClick={toggleSelect} key={image._id} className={`h-40 object-cover ${selectedImages.includes(image._id) ? "selected" : ''}`}>
                                         <img className="object-cover object-center h-full w-full" src={`https://next-store-1.blr1.cdn.digitaloceanspaces.com/thumbnails/${image.webpPath}`} alt="" />
                                     </li>
                                 ))

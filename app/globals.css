@@ -30,3 +30,11 @@
 .product-form .product-attributes input {
     @apply min-w-0 m-2 p-1;
 }
+
+.modal-images-area ul li {
+    @apply border-4 border-transparent transition-all rounded-md overflow-hidden;
+}
+
+.modal-images-area ul li.selected {
+    @apply border-teal-400;
+}
