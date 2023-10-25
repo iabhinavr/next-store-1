@@ -2,11 +2,13 @@
 
 import { useState } from "react";
 import ImageModal from "./ImageModal";
+import { Reorder } from "framer-motion";
 
 export default function ProductForm() {
 
     const [productAttributes, setProductAttributes] = useState([]);
     const [showImageModal, setShowImageModal] = useState(false);
+    const [productImages, setProductImages] = useState([]);
 
     async function addProductAttribute(ev) {
         ev.preventDefault();
@@ -73,6 +75,18 @@ export default function ProductForm() {
                 <input type="text" name="product-title" id="product-title" placeholder="enter a product title" />
 
                 <button onClick={addImageModalOnClick} className="btn-primary mt-3">Add Images</button>
+
+                <div className="overflow-y-scroll max-w-[50vw]">
+                    <Reorder.Group axis="x" values={productImages} onReorder={setProductImages} className="py-4 flex gap-2">
+                        {productImages.map((image) => (
+                            <Reorder.Item key={image.id} value={image}>
+                                <div style={{ backgroundImage: `url(https://next-store-1.blr1.cdn.digitaloceanspaces.com/thumbnails/${image.url})` }} className=" bg-cover bg-no-repeat bg-center w-40 h-40 rounded-md">
+                                </div>
+                            </Reorder.Item>
+                        ))}
+                    </Reorder.Group>
+                </div>
+
                 <label htmlFor="product-price">Price:</label>
                 <input type="number" name="product-price" id="product-price" placeholder="enter price" />
                 <label htmlFor="product-price-discounted">Offer Price:</label>
@@ -92,7 +106,7 @@ export default function ProductForm() {
 
                             <input type="text" name={`attr_${index}_key`} data-attr-field="key" data-attr-index={index} value={attr.attr_key} onChange={attrChange} placeholder="key - eg: frame_rate" />
 
-                            <input type="text"  name={`attr_${index}_value`} data-attr-field="value" data-attr-index={index} onChange={attrChange} value={attr.attr_value} placeholder="value - eg: 60Hz" />
+                            <input type="text" name={`attr_${index}_value`} data-attr-field="value" data-attr-index={index} onChange={attrChange} value={attr.attr_value} placeholder="value - eg: 60Hz" />
                             <button data-attr-index={index} onClick={attrItemClose}>
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
                                     <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM5.354 4.646a.5.5 0 1 0-.708.708L7.293 8l-2.647 2.646a.5.5 0 0 0 .708.708L8 8.707l2.646 2.647a.5.5 0 0 0 .708-.708L8.707 8l2.647-2.646a.5.5 0 0 0-.708-.708L8 7.293 5.354 4.646z" />
@@ -111,7 +125,7 @@ export default function ProductForm() {
                 <button type="submit" className="btn-primary mt-4 block">Save</button>
 
             </form>
-            <ImageModal showImageModal={showImageModal} setShowImageModal={setShowImageModal} />
+            <ImageModal showImageModal={showImageModal} setShowImageModal={setShowImageModal} productImages={productImages} setProductImages={setProductImages} />
         </>
     )
 }

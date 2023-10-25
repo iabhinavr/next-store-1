@@ -67,13 +67,14 @@ export async function POST(request) {
 
 export async function GET(request) {
 
-   const limit = request.nextUrl.searchParams.get('limit');
+   const limit = request.nextUrl.searchParams.get('limit') || 10;
+   const skip = request.nextUrl.searchParams.get('skip') || 0;
 
     if(limit) {
-        const images = await listImages(limit);
-        return NextResponse.json({images: images})
+        const images = await listImages(limit, skip);
+        return NextResponse.json({images: images});
     }
 
-    return NextResponse.json({message: "hello"})
+    return NextResponse.json({message: "hello"});
     
 }

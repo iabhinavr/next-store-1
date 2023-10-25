@@ -11,6 +11,7 @@
   "dependencies": {
     "@auth/mongodb-adapter": "^2.0.2",
     "@aws-sdk/client-s3": "^3.433.0",
+    "framer-motion": "10.12.7",
     "mongodb": "^6.1.0",
     "mongoose": "^7.6.3",
     "multiparty": "^4.2.3",

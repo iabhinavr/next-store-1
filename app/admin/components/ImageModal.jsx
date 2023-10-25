@@ -2,22 +2,57 @@
 
 import { useState, useEffect } from "react";
 
-export default function ImageModal({ showImageModal, setShowImageModal }) {
+export default function ImageModal({ showImageModal, setShowImageModal, productImages, setProductImages }) {
 
     const [uploadedFile, setUploadedFile] = useState(false);
     const [uploadStatus, setUploadStatus] = useState(false);
     const [uploadMessage, setUploadMessage] = useState('');
     const [statusColor, setStatusColor] = useState('');
     const [images, setImages] = useState([]);
-    const [selectedImages, setSelectedImages] = useState([]);
+    const [selectedImages, setSelectedImages] = useState(productImages);
+    const [loadedImages, setLoadedImages] = useState(0);
+    const [loadMoreDisabled, setLoadMoreDisabled] = useState(true);
+    const [loadMoreState, setLoadMoreState] = useState('Load more');
 
     async function getImages() {
-        const response = await fetch("/api/images?limit=15");
+
+        setLoadMoreState('Loading...');
+        setLoadMoreDisabled(true);
+
+        const limit = 15;
+
+        const response = await fetch(`/api/images?limit=${limit}&skip=${loadedImages}`);
 
         const result = await response.json();
+        console.log(result);
 
-        if(result?.images?.length > 0) {
-            setImages(result.images);
+        if (result?.images?.length > 0) {
+            const newImages = [...images, ...result.images];
+            setImages(newImages);
+            let skip = loadedImages + result.images.length;
+
+
+            let loadedImageCount = 0;
+
+            const handleImageLoad = () => {
+
+                loadedImageCount++;
+
+                if (loadedImageCount === result.images.length) {
+                    setLoadedImages(skip);
+                    setLoadMoreState('Load more');
+                    setLoadMoreDisabled(false);
+                }
+            }
+
+            result.images.forEach((newImage) => {
+                const image = new Image();
+                image.src = `https://next-store-1.blr1.cdn.digitaloceanspaces.com/thumbnails/${newImage.webpPath}`;
+                image.onload = handleImageLoad;
+            })
+        }
+        else {
+            setLoadMoreState('Nothing more');
         }
     }
 
@@ -29,11 +64,11 @@ export default function ImageModal({ showImageModal, setShowImageModal }) {
 
     useEffect(() => {
 
-        if(uploadedFile) {
+        if (uploadedFile) {
             console.log('calling getimages...');
             getImages();
         }
-        
+
     }, [uploadedFile])
 
     useEffect(() => {
@@ -61,7 +96,7 @@ export default function ImageModal({ showImageModal, setShowImageModal }) {
 
         const result = await response.json();
 
-        switch(result.uploadStatus) {
+        switch (result.uploadStatus) {
             case 'success':
                 setUploadStatus('success');
                 setUploadedFile(result.url);
@@ -88,10 +123,25 @@ export default function ImageModal({ showImageModal, setShowImageModal }) {
 
     async function toggleSelect(ev) {
         const imageId = ev.currentTarget.getAttribute('data-image-id');
+        const imageUrl = ev.currentTarget.getAttribute('data-image-url');
 
-        const newSelectedImages = selectedImages.includes(imageId) ? selectedImages.filter(item => item !== imageId) : [...selectedImages, imageId];
+        const hasImageId = selectedImages.some(obj => obj.id === imageId);
+
+        const newSelectedImages = hasImageId ? selectedImages.filter(obj => obj.id !== imageId) : [...selectedImages, {id: imageId, url: imageUrl}];
 
         setSelectedImages(newSelectedImages);
+    }
+
+    async function loadMore(ev) {
+        ev.preventDefault();
+
+        getImages();
+    }
+
+    async function addSelected(ev) {
+        ev.preventDefault();
+        setProductImages(selectedImages);
+        setShowImageModal(false);
     }
 
     return (
@@ -112,30 +162,55 @@ export default function ImageModal({ showImageModal, setShowImageModal }) {
 
                         {
                             uploadStatus &&
-                                
-                                <div className={`${statusColor} border rounded-md py-2 px-3 my-2 text-sm inline-block`}>
-                                    {uploadMessage} &nbsp;
-                                    {
-                                        uploadStatus === 'success' &&
-                                        <span>View: <a href={`${uploadedFile}`} className="underline">{uploadedFile}</a></span>
-                                        
-                                    }
-                                </div>
+
+                            <div className={`${statusColor} border rounded-md py-2 px-3 my-2 text-sm inline-block`}>
+                                {uploadMessage} &nbsp;
+                                {
+                                    uploadStatus === 'success' &&
+                                    <span>View: <a href={`${uploadedFile}`} className="underline">{uploadedFile}</a></span>
+
+                                }
+                            </div>
                         }
 
                     </div>
                     <div className="modal-images-area py-3 px-4">
-                        <ul className="grid grid-cols-5 gap-3">
+                        <ul className="flex flex-wrap  gap-1">
                             {
-                                images.map((image) => (
-                                    <li data-image-id={image._id} onClick={toggleSelect} key={image._id} className={`h-40 object-cover ${selectedImages.includes(image._id) ? "selected" : ''}`}>
+                                images.map((image) => {
+
+                                    const hasImageId = selectedImages.some(obj => obj.id === image._id);
+
+                                    return (
+                                    <li data-image-url={image.webpPath} data-image-id={image._id} onClick={toggleSelect} key={image._id} className={`h-40 flex-grow object-cover${hasImageId ? " selected" : ''}`}>
+
+                                        {
+                                            hasImageId &&
+                                            <div className="absolute inset-0 flex items-center justify-center">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" fill="#14b8a6" viewBox="0 0 16 16">
+                                                    <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z" />
+                                                </svg>
+                                            </div>
+                                        }
+
                                         <img className="object-cover object-center h-full w-full" src={`https://next-store-1.blr1.cdn.digitaloceanspaces.com/thumbnails/${image.webpPath}`} alt="" />
                                     </li>
-                                ))
+                                    )
+})
                             }
                         </ul>
+
+                        <div className="flex justify-center py-3">
+                            <button onClick={loadMore} className="btn-primary" disabled={loadMoreDisabled}>
+                                {loadMoreState}
+                            </button>
+                        </div>
+
+
                     </div>
-                    <div className="modal-footer"></div>
+                    <div className="modal-footer flex justify-end items-center py-3 px-4 border-t border-t-slate-400 bg-slate-600">
+                        <button onClick={addSelected} className="btn-primary">Add Selected</button>
+                    </div>
                 </div>
             </div>}
         </>

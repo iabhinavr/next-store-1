@@ -24,7 +24,12 @@
 }
 
 .btn-primary {
-    @apply bg-teal-500 py-2 px-3 rounded-md hover:bg-teal-600;
+    @apply bg-blue-500 py-2 px-3 rounded-sm hover:bg-blue-600;
+}
+
+.btn-primary:disabled,
+.btn-primary[disabled] {
+    @apply bg-blue-700 py-2 px-3 rounded-md hover:bg-blue-700;
 }
 
 .product-form .product-attributes input {
@@ -32,9 +37,9 @@
 }
 
 .modal-images-area ul li {
-    @apply border-4 border-transparent transition-all rounded-md overflow-hidden;
+    @apply border-4 border-slate-600 transition-all rounded-md overflow-hidden relative;
 }
 
 .modal-images-area ul li.selected {
-    @apply border-teal-400;
+    @apply border-teal-400 text-teal-400;
 }

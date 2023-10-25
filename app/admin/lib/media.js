@@ -12,11 +12,11 @@ export async function findImage(origPath) {
     return file;
 }
 
-export async function listImages(limit) {
+export async function listImages(limit, skip = 0) {
     mongooseConnect();
     
     try {
-        const images = await Media.find().sort({createdAt: -1}).limit(limit).exec();
+        const images = await Media.find().sort({createdAt: -1}).skip(skip).limit(limit).exec();
         return images;
     } catch (error) {
         // Handle any errors that occur during the search
