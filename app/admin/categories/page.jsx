@@ -1,4 +1,5 @@
 import Navigation from "../components/Navigation";
+import CategoryForm from "../components/CategoryForm";
 
 export default function Categories() {
     return (
@@ -6,8 +7,9 @@ export default function Categories() {
             <aside>
                 <Navigation page="categories" />
             </aside>
-            <main>
-                Admin Home
+            <main className="p-4 flex-1 bg-slate-700 rounded-xl">
+                <h1 className="text-2xl py-2 mb-3 border-b border-b-slate-500">Categories</h1>     
+                <CategoryForm />          
             </main>
         </section>
     )

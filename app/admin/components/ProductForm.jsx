@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ImageModal from "./ImageModal";
 import { Reorder } from "framer-motion";
 
@@ -63,6 +63,10 @@ export default function ProductForm() {
         setShowImageModal(true);
     }
 
+    useEffect(() => {
+        console.log(productImages)
+    }, [productImages])
+
     return (
         <>
             <form action="" className="product-form" encType="multipart/form-data">
@@ -76,7 +80,7 @@ export default function ProductForm() {
 
                 <button onClick={addImageModalOnClick} className="btn-primary mt-3">Add Images</button>
 
-                <div className="overflow-y-scroll max-w-[50vw]">
+                <div className="overflow-x-scroll max-w-[50vw]">
                     <Reorder.Group axis="x" values={productImages} onReorder={setProductImages} className="py-4 flex gap-2">
                         {productImages.map((image) => (
                             <Reorder.Item key={image.id} value={image}>

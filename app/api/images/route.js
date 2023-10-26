@@ -2,8 +2,17 @@ import { NextResponse } from "next/server";
 import { insertImage, findImage, listImages } from "@/app/admin/lib/media";
 import sharp from "sharp";
 import { S3PutObject } from "@/app/admin/lib/S3";
+import { getServerSession } from "next-auth";
+import { options } from "../auth/[...nextauth]/options";
+import { allowedEmails } from "../auth/[...nextauth]/options";
 
 export async function POST(request) {
+
+    const session = await getServerSession(options);
+
+    if(!session || !allowedEmails.includes(session?.user?.email)) {
+        return NextResponse.json({ message: 'Access denied' }, { status: 401 });
+    }
 
     const formData = await request.formData();
     
