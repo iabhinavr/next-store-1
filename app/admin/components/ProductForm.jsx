@@ -69,7 +69,7 @@ export default function ProductForm() {
 
     return (
         <>
-            <form action="" className="product-form" encType="multipart/form-data">
+            <form action="" className="admin-form" encType="multipart/form-data">
                 <h2 className="py-2 text-xl border-b border-b-slate-500">Basic Details</h2>
                 <label htmlFor="product-category">Select Category:</label>
                 <select name="product-category" id="product-category">
