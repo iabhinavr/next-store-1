@@ -1,7 +1,22 @@
 import Navigation from "../../components/Navigation";
 import ProductForm from "../../components/ProductForm";
+import { listCategories } from "../../lib/category";
 
-export default function Products() {
+export default async function Products() {
+
+    const limit = 25;
+
+    const categories = await listCategories(limit, 0);
+    
+    const categoriesSimple = categories.map((c) => (
+        {
+            _id: c._id.toString(),
+            title: c.title,
+            slug: c.slug,
+            description: c.description,
+        }
+    ));
+
     return (
         <>
         <section className="flex">

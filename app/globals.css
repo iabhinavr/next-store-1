@@ -23,6 +23,10 @@
     @apply p-3 block rounded-md bg-slate-700 ring-4 ring-slate-600 outline-none focus:ring-yellow-500 min-w-[50vw];
 }
 
+.admin-form .product-attributes input {
+    @apply min-w-0 m-2 p-1;
+}
+
 .btn-primary {
     @apply bg-blue-500 py-2 px-3 rounded-sm hover:bg-blue-600;
 }
@@ -40,9 +44,6 @@
     @apply bg-blue-700 py-2 px-3 rounded-md hover:bg-blue-700;
 }
 
-.product-form .product-attributes input {
-    @apply min-w-0 m-2 p-1;
-}
 
 .modal-images-area ul li {
     @apply border-4 border-slate-600 transition-all rounded-md overflow-hidden relative;

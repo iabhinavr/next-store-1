@@ -9,6 +9,19 @@ export default function ProductForm() {
     const [productAttributes, setProductAttributes] = useState([]);
     const [showImageModal, setShowImageModal] = useState(false);
     const [productImages, setProductImages] = useState([]);
+    const [categories, setCategories] = useState([]);
+
+    useEffect(() => {
+        async function fetchCategories() {
+            let response = await fetch(`/api/category`);
+            let result = await response.json();
+            
+            setCategories(result.categories);
+        }
+
+        fetchCategories();
+        
+    })
 
     async function addProductAttribute(ev) {
         ev.preventDefault();
@@ -74,6 +87,11 @@ export default function ProductForm() {
                 <label htmlFor="product-category">Select Category:</label>
                 <select name="product-category" id="product-category">
                     <option value="">Select Category</option>
+                    {
+                        categories.map((c) => (
+                            <option key={c._id} value={c._id}>{c.title}</option>
+                        ))
+                    }
                 </select>
                 <label htmlFor="product-title">Title:</label>
                 <input type="text" name="product-title" id="product-title" placeholder="enter a product title" />
@@ -129,6 +147,7 @@ export default function ProductForm() {
                 <button type="submit" className="btn-primary mt-4 block">Save</button>
 
             </form>
+            
             <ImageModal showImageModal={showImageModal} setShowImageModal={setShowImageModal} productImages={productImages} setProductImages={setProductImages} />
         </>
     )
