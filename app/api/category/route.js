@@ -17,7 +17,8 @@ export async function POST(request) {
     const categoryDetails = {
         title: formData.get('category-title'),
         slug: formData.get('category-slug'),
-        description: formData.get('category-description')
+        description: formData.get('category-description'),
+        attributes: formData.get('category-attributes') ? JSON.parse(formData.get('category-attributes')) : []
     }
 
     if(!categoryDetails.title || !categoryDetails.slug) {
@@ -54,12 +55,15 @@ export async function PUT(request) {
     const categoryDetails = {
         title: formData.get('category-title'),
         slug: formData.get('category-slug'),
-        description: formData.get('category-description')
+        description: formData.get('category-description'),
+        attributes: formData.get('category-attributes') ? JSON.parse(formData.get('category-attributes')) : []
     }
 
-    if(!_id || !categoryDetails.title || !categoryDetails.slug || !categoryDetails.description) {
+    if(!_id || !categoryDetails.title || !categoryDetails.slug) {
         return NextResponse.json({ status: 'error', message: "Required fields missing" }, { status: 400 });
     }
+
+    console.log(categoryDetails);
 
     try {
         const category = await updateCategory(_id, categoryDetails);

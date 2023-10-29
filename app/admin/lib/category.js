@@ -3,6 +3,8 @@ import { Category } from "../models/Category";
 
 export async function insertCategory(categoryDetails) {
 
+    mongooseConnect();
+
     if(!categoryDetails?.title ||
         !categoryDetails?.slug) {
             return false;

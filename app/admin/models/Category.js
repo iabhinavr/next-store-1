@@ -4,6 +4,7 @@ const CategorySchema = new Schema({
     title: {type: String, required: true},
     slug: {type: String, required: true},
     description: {type: String},
+    attributes: [{type: Object}]
 }, {
     timestamps: true,
 });

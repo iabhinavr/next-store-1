@@ -1,27 +1,121 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import ImageModal from "./ImageModal";
 import { Reorder } from "framer-motion";
 
-export default function ProductForm() {
-
-    const [productAttributes, setProductAttributes] = useState([]);
+export default function ProductForm({ productId = false }) {
+    
     const [showImageModal, setShowImageModal] = useState(false);
-    const [productImages, setProductImages] = useState([]);
+    
     const [categories, setCategories] = useState([]);
 
+    const [id, setId] = useState('');
+    const [selectedCategory, setSelectedCategory] = useState('');
+    const [title, setTitle] = useState('');
+    const [slug, setSlug] = useState('');
+    const [productImages, setProductImages] = useState([]);
+    const [price, setPrice] = useState(0);
+    const [offerPrice, setOfferPrice] = useState(0);
+    const [description, setDescription] = useState('');
+    const [mainAttributes, setMainAttributes] = useState([]);
+    const [extraAttributes, setExtraAttributes] = useState([]);
+
+    const [formAlert, setFormAlert] = useState(false);
+
+    const formRef = useRef(null);
+
+    function generateUniqueRandomString() {
+
+        const randomChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        let randomString = '';
+
+        while (randomString.length < 8) {
+            const randomIndex = Math.floor(Math.random() * randomChars.length);
+            randomString += randomChars.charAt(randomIndex);
+        }
+
+        return randomString;
+    }
+
+    async function processSlug(input) {
+        let processedSlug = input.replace(/\s/g, '-').replace(/[^a-zA-Z0-9\s-]/g, '').toLowerCase();
+
+        if (await isSlugExists(processedSlug)) {
+            let randomSring = generateUniqueRandomString();
+            return processedSlug + randomSring;
+        }
+
+        return processedSlug;
+    }
+
+    async function isSlugExists(slug) {
+
+        const response = await fetch("/api/product?slug=" + slug);
+        const result = await response.json();
+
+        console.log(result);
+
+        if (result.product) {
+            console.log('category exists');
+            return true;
+        }
+        return false;
+    }
+
+    async function titleChange(ev) {
+        const newTitle = ev.target.value;
+        setTitle(newTitle);
+        const slug = await processSlug(newTitle);
+        setSlug(slug);
+    }
+
     useEffect(() => {
+
         async function fetchCategories() {
             let response = await fetch(`/api/category`);
             let result = await response.json();
-            
+
             setCategories(result.categories);
         }
 
         fetchCategories();
-        
-    })
+
+    }, [])
+
+    useEffect(() => {
+
+        async function fetchProduct(productId) {
+            let response = await fetch(`/api/product?_id=${productId}`);
+            let result = await response.json();
+
+            if(!result?.product) {
+                return;
+            }
+
+            let c = categories.filter((category) => category._id === result.product.category);
+
+            if(!c?.length) {
+                return;
+            }
+
+            setId(result.product._id);
+            setSelectedCategory(c[0]);
+            setTitle(result.product.title);
+            setSlug(result.product.slug);
+            setPrice(result.product?.price);
+            setOfferPrice(result.product?.offerPrice);
+            setProductImages(result.product?.images);
+            setDescription(result.product?.description);
+            setMainAttributes(result.product?.mainAttributes);
+            setExtraAttributes(result.product?.extraAttributes);
+        }
+
+        if(categories?.length > 0 && productId) {
+            fetchProduct(productId);
+        }
+
+    }, [categories])
 
     async function addProductAttribute(ev) {
         ev.preventDefault();
@@ -32,28 +126,38 @@ export default function ProductForm() {
             attr_value: ""
         }
 
-        setProductAttributes([...productAttributes, newAttribute]);
+        setExtraAttributes([...extraAttributes, newAttribute]);
+    }
+
+    async function mainAttrChange(ev) {
+        const attrIndex = ev.target.getAttribute('data-attr-index');
+
+        const mainAttributesTemp = [...mainAttributes];
+
+        mainAttributesTemp[attrIndex].attr_value = ev.target.value;
+
+        setMainAttributes(mainAttributesTemp);
     }
 
     async function attrChange(ev) {
         const attrField = ev.target.getAttribute('data-attr-field');
         const attrIndex = ev.target.getAttribute('data-attr-index');
 
-        const productAttributesTemp = [...productAttributes];
+        const extraAttributesTemp = [...extraAttributes];
 
         switch (attrField) {
             case 'name':
-                productAttributesTemp[attrIndex].attr_name = ev.target.value;
+                extraAttributesTemp[attrIndex].attr_name = ev.target.value;
                 break;
             case 'key':
-                productAttributesTemp[attrIndex].attr_key = ev.target.value;
+                extraAttributesTemp[attrIndex].attr_key = ev.target.value;
                 break;
             case 'value':
-                productAttributesTemp[attrIndex].attr_value = ev.target.value;
+                extraAttributesTemp[attrIndex].attr_value = ev.target.value;
                 break;
         }
 
-        setProductAttributes(productAttributesTemp);
+        setExtraAttributes(extraAttributesTemp);
     }
 
     async function attrItemClose(ev) {
@@ -63,11 +167,11 @@ export default function ProductForm() {
         const attrIndex = ev.currentTarget.getAttribute('data-attr-index');
         console.log(attrIndex);
 
-        const productAttributesTemp = [...productAttributes];
+        const extraAttributesTemp = [...extraAttributes];
 
-        const newProductAttributesTemp = productAttributesTemp.filter((item, index) => index !== parseInt(attrIndex));
+        const newExtraAttributesTemp = extraAttributesTemp.filter((item, index) => index !== parseInt(attrIndex));
 
-        setProductAttributes(newProductAttributesTemp);
+        setExtraAttributes(newExtraAttributesTemp);
     }
 
     async function addImageModalOnClick(ev) {
@@ -80,12 +184,71 @@ export default function ProductForm() {
         console.log(productImages)
     }, [productImages])
 
+    async function productFormOnSubmit(ev) {
+
+        ev.preventDefault();
+
+        const formData = new FormData(ev.target);
+        formData.append('product-images', JSON.stringify(productImages));
+
+        const method = formData.get('product-id') ? 'PUT' : 'POST';
+
+        const response = await fetch('/api/product', {
+            method: method,
+            body: formData
+        });
+
+        const result = await response.json();
+
+        console.log(result);
+
+        if(result.status === 'success') {
+            if(!id) {
+                setFormAlert('Product added.');
+                setId(result.product._id);
+            }
+            else {
+                setFormAlert('Changes saved.');
+            }
+            
+            
+        }
+
+    }
+
+    async function categoryOnChange(ev) {
+
+        let c = categories.filter((category) => category._id === ev.target.value);
+
+        let attrs = c[0]?.attributes;
+
+        let newMainAttributes = [];
+
+        attrs.forEach((a) => {
+
+            let newAttr = {
+                attr_key: a.attr_key,
+                attr_name: a.attr_name,
+                attr_value: "",
+            }
+
+            newMainAttributes.push(newAttr);
+        })
+
+        setMainAttributes(newMainAttributes);
+    }
+
+    useEffect(() => {
+        console.log(mainAttributes);
+    }, [mainAttributes])
+
     return (
         <>
-            <form action="" className="admin-form" encType="multipart/form-data">
+            <form ref={formRef} onSubmit={productFormOnSubmit} action="" className="admin-form" encType="multipart/form-data">
+                <input type="hidden" name="product-id" value={id} onChange={(ev) => setId(ev.target.value)} />
                 <h2 className="py-2 text-xl border-b border-b-slate-500">Basic Details</h2>
                 <label htmlFor="product-category">Select Category:</label>
-                <select name="product-category" id="product-category">
+                <select name="product-category" id="product-category" value={selectedCategory?._id} onChange={categoryOnChange}>
                     <option value="">Select Category</option>
                     {
                         categories.map((c) => (
@@ -94,7 +257,10 @@ export default function ProductForm() {
                     }
                 </select>
                 <label htmlFor="product-title">Title:</label>
-                <input type="text" name="product-title" id="product-title" placeholder="enter a product title" />
+                <input onChange={titleChange} value={title} type="text" name="product-title" id="product-title" placeholder="enter a product title" />
+
+                <label htmlFor="product-slug">Slug</label>
+                <input type="text" name="product-slug" onChange={(ev) => {setSlug(ev.target.value)}} value={slug} />
 
                 <button onClick={addImageModalOnClick} className="btn-primary mt-3">Add Images</button>
 
@@ -110,21 +276,42 @@ export default function ProductForm() {
                 </div>
 
                 <label htmlFor="product-price">Price:</label>
-                <input type="number" name="product-price" id="product-price" placeholder="enter price" />
-                <label htmlFor="product-price-discounted">Offer Price:</label>
-                <input type="number" name="product-price-discounted" id="product-price-discounted" placeholder="enter offer price" />
+                <input type="number" name="product-price" id="product-price" placeholder="enter price" value={price} onChange={(ev) => setPrice(ev.target.value)} />
+                <label htmlFor="product-offer-price">Offer Price:</label>
+                <input type="number" name="product-offer-price" id="product-offer-price" placeholder="enter offer price" value={offerPrice} onChange={(ev) => setOfferPrice(ev.target.value)} />
                 <label htmlFor="product-description">Short description:</label>
-                <textarea name="product-description" id="product-description"></textarea>
+                <textarea name="product-description" id="product-description" value={description} onChange={(ev) => setDescription(ev.target.value)}></textarea>
+
+                <h2 className="py-2 mb-2 text-xl border-b border-b-slate-500">Attributes</h2>
+
+                <input type="hidden" name="main-attributes" value={JSON.stringify(mainAttributes)} />
+
+                {
+                    mainAttributes.map((attr, index) => (
+                        <div key={index} className="main-attributes grid grid-cols-5 items-center max-w-[50vw]">
+
+                            <div className="col-span-1">
+                                <label htmlFor="">{mainAttributes[index].attr_name}</label>
+                            </div>
+
+                            <div className="col-span-4">
+                                <input type="text" name={`mainattr-${index}-value`} id={`mainattr-${index}-value`} data-attr-index={index} value={mainAttributes[index].attr_value} onChange={mainAttrChange} />
+                            </div>
+                            
+                        </div>
+
+                    ))
+                }
 
 
                 <h2 className="py-2 mb-2 text-xl border-b border-b-slate-500">Additional Attributes</h2>
 
-                <input type="hidden" name="product-attributes" value={JSON.stringify(productAttributes)} />
+                <input type="hidden" name="extra-attributes" value={JSON.stringify(extraAttributes)} />
 
                 {
-                    productAttributes.map((attr, index) => (
+                    extraAttributes.map((attr, index) => (
                         <div key={index} className="product-attributes flex items-center">
-                            <input type="text" name={`attr_${index}_name`} data-attr-field="name" data-attr-index={index} value={productAttributes[index].attr_name} onChange={attrChange} placeholder="name - eg: Frame Rate" />
+                            <input type="text" name={`attr_${index}_name`} data-attr-field="name" data-attr-index={index} value={extraAttributes[index].attr_name} onChange={attrChange} placeholder="name - eg: Frame Rate" />
 
                             <input type="text" name={`attr_${index}_key`} data-attr-field="key" data-attr-index={index} value={attr.attr_key} onChange={attrChange} placeholder="key - eg: frame_rate" />
 
@@ -144,10 +331,21 @@ export default function ProductForm() {
                     <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z" />
                 </svg></button>
 
-                <button type="submit" className="btn-primary mt-4 block">Save</button>
+                <button type="submit" className="btn-primary mt-4 block">
+                    {
+                        id ? "Update" : "Add"
+                    }
+                </button>
 
             </form>
-            
+
+            {
+                formAlert &&
+                <div className="py-4 font-bold text-green-400">
+                    {formAlert}
+                </div>
+            }
+
             <ImageModal showImageModal={showImageModal} setShowImageModal={setShowImageModal} productImages={productImages} setProductImages={setProductImages} />
         </>
     )

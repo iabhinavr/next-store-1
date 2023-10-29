@@ -23,8 +23,14 @@
     @apply p-3 block rounded-md bg-slate-700 ring-4 ring-slate-600 outline-none focus:ring-yellow-500 min-w-[50vw];
 }
 
-.admin-form .product-attributes input {
+.admin-form .product-attributes input,
+.admin-form .category-attributes input,
+.admin-form .main-attributes input {
     @apply min-w-0 m-2 p-1;
+}
+
+.admin-form .main-attributes input {
+    @apply w-full;
 }
 
 .btn-primary {
