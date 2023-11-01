@@ -3,11 +3,13 @@
 import { useEffect, useState, useRef } from "react";
 import ImageModal from "./ImageModal";
 import { Reorder } from "framer-motion";
+import { redirect } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 export default function ProductForm({ productId = false }) {
-    
+
     const [showImageModal, setShowImageModal] = useState(false);
-    
+
     const [categories, setCategories] = useState([]);
 
     const [id, setId] = useState('');
@@ -24,6 +26,7 @@ export default function ProductForm({ productId = false }) {
     const [formAlert, setFormAlert] = useState(false);
 
     const formRef = useRef(null);
+    const router = useRouter();
 
     function generateUniqueRandomString() {
 
@@ -54,10 +57,7 @@ export default function ProductForm({ productId = false }) {
         const response = await fetch("/api/product?slug=" + slug);
         const result = await response.json();
 
-        console.log(result);
-
         if (result.product) {
-            console.log('category exists');
             return true;
         }
         return false;
@@ -89,13 +89,13 @@ export default function ProductForm({ productId = false }) {
             let response = await fetch(`/api/product?_id=${productId}`);
             let result = await response.json();
 
-            if(!result?.product) {
+            if (!result?.product) {
                 return;
             }
 
             let c = categories.filter((category) => category._id === result.product.category);
 
-            if(!c?.length) {
+            if (!c?.length) {
                 return;
             }
 
@@ -107,11 +107,51 @@ export default function ProductForm({ productId = false }) {
             setOfferPrice(result.product?.offerPrice);
             setProductImages(result.product?.images);
             setDescription(result.product?.description);
-            setMainAttributes(result.product?.mainAttributes);
+
+
+            /**
+             * some attributes may be added to the category later
+             * so we need to find them and add to mainAttributes
+             */
+
+            let missingAttributes = c[0].attributes.filter((catAttr) => {
+
+                if (!result?.product?.mainAttributes) {
+                    return true;
+                }
+
+                let isIncluded = result?.product?.mainAttributes.some((mainAttr) => mainAttr.attr_key === catAttr.attr_key);
+
+                return !isIncluded;
+
+            });
+
+            /**
+             * now we need to add attr_value to each missing category.attribute
+             * before appending to product.mainAttributes
+             */
+
+            let allMainAttributes = result?.product?.mainAttributes;
+
+            missingAttributes.forEach((missingAttr) => {
+
+                let newAttribute = {
+                    attr_key: missingAttr.attr_key,
+                    attr_name: missingAttr.attr_name,
+                    attr_value: ''
+                }
+
+                allMainAttributes = [...allMainAttributes, newAttribute];
+
+            })
+
+            setMainAttributes(allMainAttributes);
+
             setExtraAttributes(result.product?.extraAttributes);
+
         }
 
-        if(categories?.length > 0 && productId) {
+        if (categories?.length > 0 && productId) {
             fetchProduct(productId);
         }
 
@@ -165,7 +205,6 @@ export default function ProductForm({ productId = false }) {
         ev.preventDefault();
 
         const attrIndex = ev.currentTarget.getAttribute('data-attr-index');
-        console.log(attrIndex);
 
         const extraAttributesTemp = [...extraAttributes];
 
@@ -180,9 +219,6 @@ export default function ProductForm({ productId = false }) {
         setShowImageModal(true);
     }
 
-    useEffect(() => {
-        console.log(productImages)
-    }, [productImages])
 
     async function productFormOnSubmit(ev) {
 
@@ -200,18 +236,18 @@ export default function ProductForm({ productId = false }) {
 
         const result = await response.json();
 
-        console.log(result);
-
-        if(result.status === 'success') {
-            if(!id) {
+        if (result.status === 'success') {
+            if (!id) {
                 setFormAlert('Product added.');
                 setId(result.product._id);
+
+                router.push(`/admin/products/${result.product._id}`);
             }
             else {
                 setFormAlert('Changes saved.');
             }
-            
-            
+
+
         }
 
     }
@@ -238,29 +274,43 @@ export default function ProductForm({ productId = false }) {
         setMainAttributes(newMainAttributes);
     }
 
-    useEffect(() => {
-        console.log(mainAttributes);
-    }, [mainAttributes])
-
     return (
         <>
+            {
+                id &&
+                <h1 className="text-2xl py-2 mb-3 border-b border-b-slate-500">Editing <span className="text-green-500">"{title}"</span></h1>
+            }
+
             <form ref={formRef} onSubmit={productFormOnSubmit} action="" className="admin-form" encType="multipart/form-data">
                 <input type="hidden" name="product-id" value={id} onChange={(ev) => setId(ev.target.value)} />
                 <h2 className="py-2 text-xl border-b border-b-slate-500">Basic Details</h2>
-                <label htmlFor="product-category">Select Category:</label>
-                <select name="product-category" id="product-category" value={selectedCategory?._id} onChange={categoryOnChange}>
-                    <option value="">Select Category</option>
-                    {
-                        categories.map((c) => (
-                            <option key={c._id} value={c._id}>{c.title}</option>
-                        ))
-                    }
-                </select>
+
+                {
+                    id === '' ?
+                    <>
+                        <label htmlFor="product-category">Select Category:</label>
+                        <select name="product-category" id="product-category" value={selectedCategory?._id} onChange={categoryOnChange}>
+                            <option value="">Select Category</option>
+                            {
+                                categories.map((c) => (
+                                    <option key={c._id} value={c._id}>{c.title}</option>
+                                ))
+                            }
+                        </select>
+                    </>
+                    : 
+                    <>
+                        <div className="p-4 bg-slate-600 max-w-[50vw] mt-2 rounded-md">Category: {selectedCategory.title}</div>
+                        <input type="hidden" name="product-category" id="product-category" value={selectedCategory?._id} />
+                    </>
+                    
+                }
+                
                 <label htmlFor="product-title">Title:</label>
                 <input onChange={titleChange} value={title} type="text" name="product-title" id="product-title" placeholder="enter a product title" />
 
                 <label htmlFor="product-slug">Slug</label>
-                <input type="text" name="product-slug" onChange={(ev) => {setSlug(ev.target.value)}} value={slug} />
+                <input type="text" name="product-slug" onChange={(ev) => { setSlug(ev.target.value) }} value={slug} />
 
                 <button onClick={addImageModalOnClick} className="btn-primary mt-3">Add Images</button>
 
@@ -297,7 +347,7 @@ export default function ProductForm({ productId = false }) {
                             <div className="col-span-4">
                                 <input type="text" name={`mainattr-${index}-value`} id={`mainattr-${index}-value`} data-attr-index={index} value={mainAttributes[index].attr_value} onChange={mainAttrChange} />
                             </div>
-                            
+
                         </div>
 
                     ))

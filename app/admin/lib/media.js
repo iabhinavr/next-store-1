@@ -3,7 +3,19 @@ import { Media } from "../models/Media";
 
 export async function insertImage(origPath, webpPath) {
     mongooseConnect();
-    await Media.create({ origPath, webpPath });
+
+    try {
+        const media = await Media.create({ origPath, webpPath });
+
+        if(!media) {
+            return null;
+        }
+        return media;
+    }
+    catch(error) {
+        return null;
+    }
+    
 }
 
 export async function findImage(origPath) {

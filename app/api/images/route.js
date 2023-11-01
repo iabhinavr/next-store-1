@@ -18,6 +18,8 @@ export async function POST(request) {
     
     const file = formData.get('product-images');
 
+    console.log(file)
+
     const fileName = file?.name;
     const fileType = file?.type;
 
@@ -61,9 +63,9 @@ export async function POST(request) {
             
             console.log('upload successful');
 
-            await insertImage(origPath, webpPath);
+            let image = await insertImage(origPath, webpPath);
             
-            return NextResponse.json({uploadStatus: 'success', fileName: fileName, url: process.env.SPACES_CDN_URL + "/" + fileName});
+            return NextResponse.json({uploadStatus: 'success', fileName: fileName, url: process.env.SPACES_CDN_URL + "/" + fileName, image: image});
         }
 
         return NextResponse.json({ uploadStatus: 'error', message: 'some error occurred' }, {status: 400});

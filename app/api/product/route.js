@@ -13,8 +13,6 @@ export async function POST(request) {
 
     const formData = await request.formData();
 
-    console.log(formData);
-
     const productDetails = {
         category: formData.get('product-category'),
         title: formData.get('product-title'),
@@ -27,16 +25,12 @@ export async function POST(request) {
         extraAttributes: formData.get('extra-attributes') ? JSON.parse(formData.get('extra-attributes')) : [{}]
     }
 
-    console.log(productDetails);
-
     if(!productDetails.title || !productDetails.category) {
         return NextResponse.json({ status: 'error', message: "Required fields missing" }, { status: 400 });
     }
 
     try {
         const product = await insertProduct(productDetails);
-
-        console.log(product);
 
         if(!product) {
             return NextResponse.json({ status: 'error', product: false, message: 'could not add product' });
@@ -57,8 +51,6 @@ export async function PUT(request) {
     }
 
     const formData = await request.formData();
-
-    console.log(formData);
 
     const _id = formData.get('product-id') || '';
 
@@ -83,8 +75,6 @@ export async function PUT(request) {
 
     try {
         const product = await updateProduct(_id, productDetails);
-
-        console.log(product);
 
         if(!product) {
             return NextResponse.json({ status: 'error', product: false, message: 'could not updated product' });

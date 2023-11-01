@@ -3,6 +3,9 @@ import Link from "next/link";
 import { listProducts } from "../lib/product";
 import { DateReadable } from "../lib/utils";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function Products() {
 
     const limit = 25;
@@ -22,7 +25,7 @@ export default async function Products() {
     return (
         <section className="flex">
             <aside>
-                <Navigation page="categories" />
+                <Navigation page="products" />
             </aside>
             <main className="p-4 flex-1 bg-slate-700 rounded-xl">
                 

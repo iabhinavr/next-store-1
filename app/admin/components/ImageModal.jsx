@@ -9,28 +9,25 @@ export default function ImageModal({ showImageModal, setShowImageModal, productI
     const [uploadMessage, setUploadMessage] = useState('');
     const [statusColor, setStatusColor] = useState('');
     const [images, setImages] = useState([]);
-    const [selectedImages, setSelectedImages] = useState(productImages);
+    const [selectedImages, setSelectedImages] = useState([]);
     const [loadedImages, setLoadedImages] = useState(0);
     const [loadMoreDisabled, setLoadMoreDisabled] = useState(true);
     const [loadMoreState, setLoadMoreState] = useState('Load more');
 
-    async function getImages() {
+    async function loadImages() {
 
         setLoadMoreState('Loading...');
         setLoadMoreDisabled(true);
 
-        const limit = 15;
+        const limit = 5;
 
         const response = await fetch(`/api/images?limit=${limit}&skip=${loadedImages}`);
 
         const result = await response.json();
-        console.log(result);
 
         if (result?.images?.length > 0) {
             const newImages = [...images, ...result.images];
             setImages(newImages);
-            let skip = loadedImages + result.images.length;
-
 
             let loadedImageCount = 0;
 
@@ -39,7 +36,7 @@ export default function ImageModal({ showImageModal, setShowImageModal, productI
                 loadedImageCount++;
 
                 if (loadedImageCount === result.images.length) {
-                    setLoadedImages(skip);
+                    setLoadedImages(loadedImages + result.images.length);
                     setLoadMoreState('Load more');
                     setLoadMoreDisabled(false);
                 }
@@ -54,26 +51,25 @@ export default function ImageModal({ showImageModal, setShowImageModal, productI
         else {
             setLoadMoreState('Nothing more');
         }
+
+        
     }
 
     useEffect(() => {
 
-        getImages();
+        loadImages();
 
     }, []);
 
-    useEffect(() => {
-
-        if (uploadedFile) {
-            console.log('calling getimages...');
-            getImages();
-        }
-
-    }, [uploadedFile])
+    /**
+     * productImages may get fully loaded after this component is loaded
+     * so initialize selectedImages here
+     */
 
     useEffect(() => {
-        console.log(selectedImages);
-    }, [selectedImages])
+        console.log('selected images');
+        setSelectedImages([...productImages.map(image => ({ ...image }))]);
+    }, [productImages])
 
     async function closeImageModalOnClick(ev) {
         ev.preventDefault();
@@ -100,6 +96,10 @@ export default function ImageModal({ showImageModal, setShowImageModal, productI
             case 'success':
                 setUploadStatus('success');
                 setUploadedFile(result.url);
+                setLoadedImages(loadedImages + 1);
+
+                setImages([result.image, ...images]);
+
                 setUploadMessage('File uploaded successfully.');
                 setStatusColor('bg-teal-700 border-teal-500');
                 break;
@@ -134,8 +134,7 @@ export default function ImageModal({ showImageModal, setShowImageModal, productI
 
     async function loadMore(ev) {
         ev.preventDefault();
-
-        getImages();
+        await loadImages();
     }
 
     async function addSelected(ev) {
@@ -177,9 +176,13 @@ export default function ImageModal({ showImageModal, setShowImageModal, productI
                     <div className="modal-images-area py-3 px-4">
                         <ul className="flex flex-wrap  gap-1">
                             {
+                                
                                 images.map((image) => {
 
-                                    const hasImageId = selectedImages.some(obj => obj.id === image._id);
+                                    const hasImageId = selectedImages.some((obj) => 
+                                        obj.id === image._id.toString()
+                                    );
+                                    
 
                                     return (
                                     <li data-image-url={image.webpPath} data-image-id={image._id} onClick={toggleSelect} key={image._id} className={`h-40 flex-grow object-cover${hasImageId ? " selected" : ''}`}>

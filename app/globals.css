@@ -50,6 +50,11 @@
     @apply bg-blue-700 py-2 px-3 rounded-md hover:bg-blue-700;
 }
 
+.admin-form select[disabled],
+.admin-form select:disabled {
+    @apply bg-slate-600;
+}
+
 
 .modal-images-area ul li {
     @apply border-4 border-slate-600 transition-all rounded-md overflow-hidden relative;
