@@ -1,14 +1,17 @@
 import Navigation from "../components/Navigation";
+import MediaList from "../components/MediaList";
 
-export default function Media() {
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+export default async function Media() {
+
     return (
         <section className="flex">
             <aside>
                 <Navigation page="media" />
             </aside>
-            <main>
-                Admin Home
-            </main>
+            <MediaList />
         </section>
     )
 }

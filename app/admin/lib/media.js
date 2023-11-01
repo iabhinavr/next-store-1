@@ -24,6 +24,12 @@ export async function findImage(origPath) {
     return file;
 }
 
+export async function findImageById(_id) {
+    mongooseConnect();
+    const file = await Media.findOne({ _id }).exec();
+    return file;
+}
+
 export async function listImages(limit, skip = 0) {
     mongooseConnect();
     
@@ -34,5 +40,15 @@ export async function listImages(limit, skip = 0) {
         // Handle any errors that occur during the search
         console.error(error);
         throw error;
+    }
+}
+
+export async function deleteMedia(_id) {
+    try {
+        const result = await Media.deleteOne({ _id: _id });
+        return result;
+    }
+    catch(error) {
+        return false;
     }
 }

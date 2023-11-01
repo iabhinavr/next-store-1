@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { insertImage, findImage, listImages } from "@/app/admin/lib/media";
+import { insertImage, findImage, findImageById, listImages, deleteMedia } from "@/app/admin/lib/media";
 import sharp from "sharp";
-import { S3PutObject } from "@/app/admin/lib/S3";
+import { S3PutObject, S3DeleteObject } from "@/app/admin/lib/S3";
 import { getServerSession } from "next-auth";
 import { options } from "../auth/[...nextauth]/options";
 import { allowedEmails } from "../auth/[...nextauth]/options";
@@ -88,4 +88,42 @@ export async function GET(request) {
 
     return NextResponse.json({message: "hello"});
     
+}
+
+export async function DELETE(request) {
+    const session = await getServerSession(options);
+
+    if(!session || !allowedEmails.includes(session?.user?.email)) {
+        return NextResponse.json({ message: 'Access denied' }, { status: 401 });
+    }
+
+    const data = await request.json();
+
+    const image = await findImageById(data.mediaId);
+
+    console.log(image);
+
+    if(!image) {
+        return NextResponse.json({ status: 'error', message: 'Invalid request' }, { status: 400 });
+    }
+
+    try {
+        const origFullDelete = await S3DeleteObject(image.origPath);
+        const origThumbDelete = await S3DeleteObject('thumbnails/' + image.origPath);
+        const webpFullDelete = await S3DeleteObject(image.webpPath);
+        const webpThumbDelete = await S3DeleteObject('thumbnails/' + image.webpPath);
+
+        console.log(origFullDelete);
+    
+        const deleteReq = await deleteMedia(image._id.toString());
+
+        if(deleteReq?.deletedCount === 1) {
+            return NextResponse.json({ status: 'success', message: 'Media item deleted' });
+        }
+        return NextResponse.json({ status: 'error', message: 'Error deleting media item' });
+    }
+    catch(error) {
+        return NextResponse.json({ status: 'error', message: error.message });
+    }
+
 }
