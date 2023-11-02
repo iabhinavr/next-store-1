@@ -1,25 +1,25 @@
-import Link from "next/link";
-import Navigation from "../components/Navigation";
-import ProductList from "../components/ProductList";
-import { listProducts, getProductsCount } from "../lib/product";
-import { DateReadable } from "../lib/utils";
+import Navigation from "../../../components/Navigation";
+import ProductList from "@/app/admin/components/ProductList";
+import { listProducts, getProductsCount } from "../../../lib/product";
+import { DateReadable } from "../../../lib/utils";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-export default async function Products() {
+export default async function Products({ params }) {
 
     const limit = 5;
-    const products = await listProducts(limit, 0);
+    const skip = limit*(params.pageNo - 1);
+
+    const products = await listProducts(limit, skip);
     const productsCount = await getProductsCount();
 
-    let currentPageNo = 1;
+    let currentPageNo = params.pageNo;
     let totalPages = parseInt(productsCount) % limit === 0 ? 
                         productsCount / limit : 
                         Math.ceil(parseInt(productsCount) / limit);
-    
 
-    const productsSimple = products.map((p) => (
+    const productsSimple = products?.map((p) => (
         {
             _id: p._id.toString(),
             title: p.title,

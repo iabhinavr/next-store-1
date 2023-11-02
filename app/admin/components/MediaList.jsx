@@ -2,32 +2,37 @@
 
 import { DateReadable } from "../lib/utils";
 import { useState, useEffect } from "react";
+import MediaUploadForm from "./MediaUploadForm";
 
-export default function MediaList() { 
+export default function MediaList() {
 
     const [images, setImages] = useState([]);
+    const [deleteId, setDeleteId] = useState('');
 
     async function deleteMedia(ev) {
         ev.preventDefault();
-    
+
         const mediaId = ev.target.getAttribute('data-media-id');
-    
+
+        setDeleteId(mediaId);
+
         const data = {
             mediaId
         }
-    
+
         const response = await fetch(`/api/images`, {
             method: 'DELETE',
             body: JSON.stringify(data)
         });
-    
+
         const result = await response.json();
-        
-        if(result.status === 'success') {
+
+        if (result.status === 'success') {
             let newImages = images.filter((image) => image._id !== mediaId);
             setImages(newImages);
+            setDeleteId('');
         }
-    
+
     }
 
     useEffect(() => {
@@ -39,10 +44,10 @@ export default function MediaList() {
 
             const images = result?.images;
 
-            if(!images) {
+            if (!images) {
                 return false;
             }
-        
+
             const imagesSimple = images.map((m) => (
                 {
                     _id: m._id.toString(),
@@ -66,6 +71,8 @@ export default function MediaList() {
 
             </div>
 
+            <MediaUploadForm images={images} setImages={setImages} />
+
             <table className="my-3">
 
                 <thead>
@@ -81,23 +88,26 @@ export default function MediaList() {
 
                 <tbody>
                     {
-                        images.map((m) => (
-                            <tr key={m._id}>
-                                <td>
-                                    <img src={`https://next-store-1.blr1.cdn.digitaloceanspaces.com/thumbnails/${m.webpPath}`} alt="" className="w-20 h-20 rounded-md object-cover" />
-                                </td>
-                                <td>
-                                    {m._id}
-                                </td>
+                        images.map((m) => {
 
-                                <td>
-                                    {m.createdAt}
-                                </td>
-                                <td>
-                                    <button data-media-id={m._id} onClick={deleteMedia} className="btn-danger">Delete</button>
-                                </td>
-                            </tr>
-                        ))
+                            return (
+                                <tr key={m._id}>
+                                    <td>
+                                        <img src={`https://next-store-1.blr1.cdn.digitaloceanspaces.com/thumbnails/${m.webpPath}`} alt="" className="w-20 h-20 rounded-md object-cover" />
+                                    </td>
+                                    <td>
+                                        {m._id}
+                                    </td>
+
+                                    <td>
+                                        {m.createdAt}
+                                    </td>
+                                    <td>
+                                        <button data-media-id={m._id} onClick={deleteMedia} className="btn-danger" disabled={m._id === deleteId ? true : false}>{m._id === deleteId ? 'Deleting...' : 'Delete'}</button>
+                                    </td>
+                                </tr>
+                            )
+                        })
                     }
                 </tbody>
 

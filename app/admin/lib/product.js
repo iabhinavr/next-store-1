@@ -74,3 +74,18 @@ export async function deleteProduct(_id) {
         return false;
     }
 }
+
+export async function getProductsCount() {
+    mongooseConnect();
+
+    try {
+        const count = await Product.find().countDocuments().exec();
+        if(count) {
+            return count;
+        }
+        return false;
+    }
+    catch(error) {
+        return false;
+    }
+}
