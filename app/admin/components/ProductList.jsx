@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 export default function ProductList({ productList, currentPageNo, totalPages }) {
-    console.log(currentPageNo);
+    
     return (
         <>
             <main className="p-4 flex-1 bg-slate-700 rounded-xl">

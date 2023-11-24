@@ -26,7 +26,7 @@ export async function insertProduct(productDetails) {
 
 export async function findProduct(slug) {
     mongooseConnect();
-    const product = await Product.findOne({ slug }).exec();
+    const product = await Product.findOne({ slug: slug }).exec();
     return product;
 }
 
