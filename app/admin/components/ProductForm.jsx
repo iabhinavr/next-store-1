@@ -318,7 +318,7 @@ export default function ProductForm({ productId = false }) {
                     <Reorder.Group axis="x" values={productImages} onReorder={setProductImages} className="py-4 flex gap-2">
                         {productImages.map((image) => (
                             <Reorder.Item key={image.id} value={image}>
-                                <div style={{ backgroundImage: `url(https://next-store-1.blr1.cdn.digitaloceanspaces.com/thumbnails/${image.url})` }} className=" bg-cover bg-no-repeat bg-center w-40 h-40 rounded-md">
+                                <div style={{ backgroundImage: `url(https://mediacdn.codingreflections.com/thumbnails/${image.url})` }} className=" bg-cover bg-no-repeat bg-center w-40 h-40 rounded-md">
                                 </div>
                             </Reorder.Item>
                         ))}

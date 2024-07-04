@@ -41,7 +41,7 @@ export default function ImageModal({ showImageModal, setShowImageModal, productI
 
             result.images.forEach((newImage) => {
                 const image = new Image();
-                image.src = `https://next-store-1.blr1.cdn.digitaloceanspaces.com/thumbnails/${newImage.webpPath}`;
+                image.src = `https://mediacdn.codingreflections.com/thumbnails/${newImage.webpPath}`;
                 image.onload = handleImageLoad;
             })
         }
@@ -131,7 +131,7 @@ export default function ImageModal({ showImageModal, setShowImageModal, productI
                                             </div>
                                         }
 
-                                        <img className="object-cover object-center h-full w-full" src={`https://next-store-1.blr1.cdn.digitaloceanspaces.com/thumbnails/${image.webpPath}`} alt="" />
+                                        <img className="object-cover object-center h-full w-full" src={`https://mediacdn.codingreflections.com/thumbnails/${image.webpPath}`} alt="" />
                                     </li>
                                     )
 })

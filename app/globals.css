@@ -9,7 +9,9 @@
 #admin-nav.home ul li.nav-item-home a,
 #admin-nav.products ul li.nav-item-products a,
 #admin-nav.categories ul li.nav-item-categories a,
-#admin-nav.media ul li.nav-item-media a {
+#admin-nav.media ul li.nav-item-media a,
+#admin-nav.orders ul li.nav-item-orders a,
+#admin-nav.customers ul li.nav-item-customers a {
     @apply bg-slate-700;
 }
 
