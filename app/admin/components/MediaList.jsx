@@ -93,7 +93,7 @@ export default function MediaList() {
                             return (
                                 <tr key={m._id}>
                                     <td>
-                                        <img src={`https://mediacdn.codingreflections.com/thumbnails/${m.webpPath}`} alt="" className="w-20 h-20 rounded-md object-cover" />
+                                        <img src={`https://garden-store.blr1.cdn.digitaloceanspaces.com/${m.webpPath}`} alt="" className="w-20 h-20 rounded-md object-cover" />
                                     </td>
                                     <td>
                                         {m._id}

@@ -1,5 +1,6 @@
 import { mongooseConnect } from "./mongoose";
 import { Product } from "../models/Product";
+import { Category } from "../models/Category";
 
 export async function insertProduct(productDetails) {
 
@@ -40,8 +41,8 @@ export async function listProducts(limit, skip = 0) {
     mongooseConnect();
     
     try {
-        const categories = await Product.find().sort({createdAt: -1}).skip(skip).limit(limit).exec();
-        return categories;
+        const products = await Product.find().populate('category').sort({createdAt: -1}).skip(skip).limit(limit).exec();
+        return products;
     } catch (error) {
         // Handle any errors that occur during the search
         console.error(error);

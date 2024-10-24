@@ -131,7 +131,7 @@ export default function ImageModal({ showImageModal, setShowImageModal, productI
                                             </div>
                                         }
 
-                                        <img className="object-cover object-center h-full w-full" src={`https://mediacdn.codingreflections.com/thumbnails/${image.webpPath}`} alt="" />
+                                        <img className="object-cover object-center h-full w-full" src={`https://garden-store.blr1.cdn.digitaloceanspaces.com/thumbnails/${image.webpPath}`} alt="" />
                                     </li>
                                     )
 })

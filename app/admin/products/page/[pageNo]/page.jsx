@@ -8,7 +8,7 @@ export const revalidate = 0;
 
 export default async function Products({ params }) {
 
-    const limit = 5;
+    const limit = 10;
     const skip = limit*(params.pageNo - 1);
 
     const products = await listProducts(limit, skip);
@@ -25,7 +25,8 @@ export default async function Products({ params }) {
             title: p.title,
             slug: p.slug,
             description: p.description,
-            createdAt: DateReadable(p.createdAt.toString())
+            category: p.category,
+            createdAt: DateReadable(p.createdAt.toString()),
         }
     ));
 
@@ -34,7 +35,7 @@ export default async function Products({ params }) {
             <aside>
                 <Navigation page="products" />
             </aside>
-            <ProductList productList={productsSimple} currentPageNo={currentPageNo} totalPages={totalPages} />
+            <ProductList productList={productsSimple} currentPageNo={currentPageNo} totalPages={totalPages} itemStartCount={((currentPageNo-1)*limit)+1} />
         </section>
     )
 }

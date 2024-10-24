@@ -1,7 +1,7 @@
 import Link from "next/link";
 
-export default function ProductList({ productList, currentPageNo, totalPages }) {
-    
+export default function ProductList({ productList, currentPageNo, totalPages, itemStartCount = 1 }) {
+    let slNo = itemStartCount;
     return (
         <>
             <main className="p-4 flex-1 bg-slate-700 rounded-xl">
@@ -15,7 +15,9 @@ export default function ProductList({ productList, currentPageNo, totalPages }) 
 
                     <thead>
                         <tr>
+                            <th>No</th>
                             <th>Title</th>
+                            <th>Category</th>
                             <th>Slug</th>
                             <th>Date Created</th>
                         </tr>
@@ -23,19 +25,25 @@ export default function ProductList({ productList, currentPageNo, totalPages }) 
 
                     <tbody>
                         {
-                            productList.map((p) => (
+                            productList.map((p) => {
+                                slNo++;
+                                return (
                                 <tr key={p._id}>
+                                    <td>{slNo-1}</td>
                                     <td>
                                         <Link className="text-blue-400 hover:underline" href={`/admin/products/${p._id}`}>
                                             {p.title}
                                         </Link>
                                     </td>
+                                    <td>{p.category.title}</td>
                                     <td>{p.slug}</td>
                                     <td>
                                         {p.createdAt}
                                     </td>
                                 </tr>
-                            ))
+                                )
+ 
+                            })
                         }
                     </tbody>
 

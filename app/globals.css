@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 #admin-nav ul li a {
-    @apply py-2 px-5 block hover:bg-slate-800 flex gap-2 items-center;
+    @apply py-4 px-10 block hover:bg-slate-800 flex gap-4 items-center;
 }
 
 #admin-nav.home ul li.nav-item-home a,
