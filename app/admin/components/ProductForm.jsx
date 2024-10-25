@@ -95,12 +95,11 @@ export default function ProductForm({ productId = false }) {
 
             let c = categories.filter((category) => category._id === result.product.category);
 
-            if (!c?.length) {
-                return;
+            if (c?.length) {
+                setSelectedCategory(c[0]);
             }
 
             setId(result.product._id);
-            setSelectedCategory(c[0]);
             setTitle(result.product.title);
             setSlug(result.product.slug);
             setPrice(result.product?.price);
@@ -108,54 +107,57 @@ export default function ProductForm({ productId = false }) {
             setProductImages(result.product?.images);
             setDescription(result.product?.description);
 
-
-            /**
-             * some attributes may be added to the category later
-             * so we need to find them and add to mainAttributes
-             */
-
-            let missingAttributes = c[0].attributes.filter((catAttr) => {
-
-                if (!result?.product?.mainAttributes) {
-                    return true;
-                }
-
-                let isIncluded = result?.product?.mainAttributes.some((mainAttr) => mainAttr.attr_key === catAttr.attr_key);
-
-                return !isIncluded;
-
-            });
-
-            /**
-             * now we need to add attr_value to each missing category.attribute
-             * before appending to product.mainAttributes
-             */
-
-            let allMainAttributes = result?.product?.mainAttributes;
-
-            missingAttributes.forEach((missingAttr) => {
-
-                let newAttribute = {
-                    attr_key: missingAttr.attr_key,
-                    attr_name: missingAttr.attr_name,
-                    attr_value: ''
-                }
-
-                allMainAttributes = [...allMainAttributes, newAttribute];
-
-            })
-
-            setMainAttributes(allMainAttributes);
-
             setExtraAttributes(result.product?.extraAttributes);
 
+            /**
+             * Categories can be edited later after being assigned
+             * to a product. Attrs can be added/deleted/modified.
+             * So, for a product:
+             * 1. get all the cat attrs - name, key
+             * 2. if value exists for a key in products table, 
+             */
+
+            if(selectedCategory) {
+
+                let allCatAttributes = c[0].attributes;
+                let productAttributes = result?.product?.mainAttributes;
+                let allMainAttributes = [];
+    
+                allCatAttributes.forEach((cAttr) => {
+    
+                    let newAttribute = {
+                        attr_key: cAttr.attr_key,
+                        attr_name: cAttr.attr_name,
+                        attr_value: '',
+                    }
+    
+                    let isAttrDefined = productAttributes.some((pAttr) => {
+                        return (pAttr.attr_key === cAttr.attr_key)
+                    })
+    
+                    if (isAttrDefined) {
+                        let definedAttr = productAttributes.find((pAttr) => (pAttr.attr_key === cAttr.attr_key));
+                        newAttribute.attr_value = definedAttr.attr_value;
+                    }
+    
+                    allMainAttributes.push(newAttribute);
+                })
+
+                setMainAttributes(allMainAttributes);
+            }
         }
 
-        if (categories?.length > 0 && productId) {
+        if (productId) {
             fetchProduct(productId);
         }
 
     }, [categories])
+
+    /**
+     * Function that gets called
+     * when the Add Extra Attribute button is clicked
+     * on the Product Form (nothing to do with the category attrs)
+     */
 
     async function addProductAttribute(ev) {
         ev.preventDefault();
@@ -169,6 +171,11 @@ export default function ProductForm({ productId = false }) {
         setExtraAttributes([...extraAttributes, newAttribute]);
     }
 
+    /**
+     * Function that gets called 
+     * when the value of a main attribute is changed
+     */
+
     async function mainAttrChange(ev) {
         const attrIndex = ev.target.getAttribute('data-attr-index');
 
@@ -179,8 +186,26 @@ export default function ProductForm({ productId = false }) {
         setMainAttributes(mainAttributesTemp);
     }
 
+    /**
+     * Function that gets called
+     * when the any of three fields of an extra attribute
+     * is changed - name, key, or value
+     */
+
     async function attrChange(ev) {
+
+        /** 
+         * First, find what field it is, and the index
+         * data-attr-field can be name/key/value
+         */
+
         const attrField = ev.target.getAttribute('data-attr-field');
+
+        /** 
+         * data-attr-index is given 
+         * to all 3 fields, and is the same
+         */
+
         const attrIndex = ev.target.getAttribute('data-attr-index');
 
         const extraAttributesTemp = [...extraAttributes];
@@ -252,9 +277,11 @@ export default function ProductForm({ productId = false }) {
 
     }
 
-    async function categoryOnChange(ev) {
+    async function categoryOnChange(ev) { 
 
         let c = categories.filter((category) => category._id === ev.target.value);
+
+        setSelectedCategory(c[0]);
 
         let attrs = c[0]?.attributes;
 
@@ -285,26 +312,16 @@ export default function ProductForm({ productId = false }) {
                 <input type="hidden" name="product-id" value={id} onChange={(ev) => setId(ev.target.value)} />
                 <h2 className="py-2 text-xl border-b border-b-slate-500">Basic Details</h2>
 
-                {
-                    id === '' ?
-                    <>
-                        <label htmlFor="product-category">Select Category:</label>
-                        <select name="product-category" id="product-category" value={selectedCategory?._id} onChange={categoryOnChange}>
-                            <option value="">Select Category</option>
-                            {
-                                categories.map((c) => (
-                                    <option key={c._id} value={c._id}>{c.title}</option>
-                                ))
-                            }
-                        </select>
-                    </>
-                    : 
-                    <>
-                        <div className="p-4 bg-slate-600 max-w-[50vw] mt-2 rounded-md">Category: {selectedCategory.title}</div>
-                        <input type="hidden" name="product-category" id="product-category" value={selectedCategory?._id} />
-                    </>
-                    
-                }
+                <label htmlFor="product-category">Select Category:</label>
+
+                <select name="product-category" id="product-category" value={selectedCategory?._id} onChange={categoryOnChange}>
+                    <option value="">Select Category</option>
+                    {
+                        categories?.map((c) => (
+                            <option key={c._id} value={c._id}>{c.title}</option>
+                        ))
+                    }
+                </select>
                 
                 <label htmlFor="product-title">Title:</label>
                 <input onChange={titleChange} value={title} type="text" name="product-title" id="product-title" placeholder="enter a product title" />
@@ -361,11 +378,11 @@ export default function ProductForm({ productId = false }) {
                 {
                     extraAttributes.map((attr, index) => (
                         <div key={index} className="product-attributes flex items-center">
-                            <input type="text" name={`attr_${index}_name`} data-attr-field="name" data-attr-index={index} value={extraAttributes[index].attr_name} onChange={attrChange} placeholder="name - eg: Frame Rate" />
+                            <input type="text" name={`attr_${index}_name`} data-attr-field="name" data-attr-index={index} value={extraAttributes[index].attr_name} onChange={attrChange} placeholder="name - eg: Size (kg)" />
 
-                            <input type="text" name={`attr_${index}_key`} data-attr-field="key" data-attr-index={index} value={attr.attr_key} onChange={attrChange} placeholder="key - eg: frame_rate" />
+                            <input type="text" name={`attr_${index}_key`} data-attr-field="key" data-attr-index={index} value={attr.attr_key} onChange={attrChange} placeholder="key - eg: size_kg" />
 
-                            <input type="text" name={`attr_${index}_value`} data-attr-field="value" data-attr-index={index} onChange={attrChange} value={attr.attr_value} placeholder="value - eg: 60Hz" />
+                            <input type="text" name={`attr_${index}_value`} data-attr-field="value" data-attr-index={index} onChange={attrChange} value={attr.attr_value} placeholder="value - eg: 5" />
                             <button data-attr-index={index} onClick={attrItemClose}>
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
                                     <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM5.354 4.646a.5.5 0 1 0-.708.708L7.293 8l-2.647 2.646a.5.5 0 0 0 .708.708L8 8.707l2.646 2.647a.5.5 0 0 0 .708-.708L8.707 8l2.647-2.646a.5.5 0 0 0-.708-.708L8 7.293 5.354 4.646z" />

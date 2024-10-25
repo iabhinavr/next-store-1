@@ -35,7 +35,7 @@ export default function ProductList({ productList, currentPageNo, totalPages, it
                                             {p.title}
                                         </Link>
                                     </td>
-                                    <td>{p.category.title}</td>
+                                    <td>{p.category?.title}</td>
                                     <td>{p.slug}</td>
                                     <td>
                                         {p.createdAt}

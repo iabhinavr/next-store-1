@@ -13,6 +13,8 @@ export default async function Products() {
     const products = await listProducts(limit, 0);
     const productsCount = await getProductsCount();
 
+    console.log(products);
+
     let currentPageNo = 1;
     let totalPages = parseInt(productsCount) % limit === 0 ? 
                         productsCount / limit : 
@@ -25,7 +27,7 @@ export default async function Products() {
             title: p.title,
             slug: p.slug,
             description: p.description,
-            category: p.category,
+            category: p.category ? p.category : null,
             createdAt: DateReadable(p.createdAt.toString()),
         }
     ));
