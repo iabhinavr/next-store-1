@@ -1,18 +1,9 @@
 import { NextResponse } from "next/server";
-import { insertImage, findImage, findImageById, listImages, deleteMedia } from "@/app/admin/lib/media";
+import { insertImage, findImage, findImageById, listImages, deleteMedia } from "@/app/lib/media";
 import sharp from "sharp";
-import { S3PutObject, S3DeleteObject } from "@/app/admin/lib/S3";
-import { getServerSession } from "next-auth";
-import { options } from "../auth/[...nextauth]/options";
-import { allowedEmails } from "../auth/[...nextauth]/options";
+import { S3PutObject, S3DeleteObject } from "@/app/lib/S3";
 
 export async function POST(request) {
-
-    const session = await getServerSession(options);
-
-    if(!session || !allowedEmails.includes(session?.user?.email)) {
-        return NextResponse.json({ message: 'Access denied' }, { status: 401 });
-    }
 
     const formData = await request.formData();
     
@@ -91,11 +82,6 @@ export async function GET(request) {
 }
 
 export async function DELETE(request) {
-    const session = await getServerSession(options);
-
-    if(!session || !allowedEmails.includes(session?.user?.email)) {
-        return NextResponse.json({ message: 'Access denied' }, { status: 401 });
-    }
 
     const data = await request.json();
 

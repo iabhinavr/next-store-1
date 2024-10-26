@@ -1,6 +1,6 @@
 'use client';
 
-import { DateReadable } from "../lib/utils";
+import { DateReadable } from "@/app/lib/utils";
 import { useState, useEffect } from "react";
 import MediaUploadForm from "./MediaUploadForm";
 

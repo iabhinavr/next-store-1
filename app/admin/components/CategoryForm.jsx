@@ -45,10 +45,7 @@ export default function CategoryForm({ initialCategories }) {
         const response = await fetch("/api/category?slug=" + slug);
         const result = await response.json();
 
-        console.log(result);
-
         if (result.category) {
-            console.log('category exists');
             return true;
         }
         return false;
@@ -65,9 +62,7 @@ export default function CategoryForm({ initialCategories }) {
         ev.preventDefault();
 
         const formData = new FormData(ev.target);
-        console.log(formData?.get('category-id'));
         const method = formData?.get('category-id') ? 'PUT' : 'POST';
-        console.log(method);
 
         let response = await fetch("/api/category", {
             method: method,
@@ -75,7 +70,6 @@ export default function CategoryForm({ initialCategories }) {
         });
 
         let result = await response.json();
-        console.log(result);
 
         if (result.status === 'success') {
             setId('');
@@ -174,7 +168,6 @@ export default function CategoryForm({ initialCategories }) {
         ev.preventDefault();
 
         const attrIndex = ev.currentTarget.getAttribute('data-attr-index');
-        console.log(attrIndex);
 
         const categoryAttributesTemp = [...categoryAttributes];
 

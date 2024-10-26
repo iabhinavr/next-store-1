@@ -1,7 +1,7 @@
 import Navigation from "../../../components/Navigation";
 import ProductList from "@/app/admin/components/ProductList";
-import { listProducts, getProductsCount } from "../../../lib/product";
-import { DateReadable } from "../../../lib/utils";
+import { listProducts, getProductsCount } from "@/app/lib/product";
+import { DateReadable } from "@/app/lib/utils";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;

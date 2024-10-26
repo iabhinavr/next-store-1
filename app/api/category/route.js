@@ -1,16 +1,8 @@
 import { NextResponse } from "next/server";
-import { insertCategory, findCategory, listCategories, findCategoryById, updateCategory, deleteCategory } from "@/app/admin/lib/category";
-import { S3PutObject } from "@/app/admin/lib/S3";
-import { getServerSession } from "next-auth";
-import { options } from "../auth/[...nextauth]/options";
-import { allowedEmails } from "../auth/[...nextauth]/options";
+import { insertCategory, findCategory, listCategories, findCategoryById, updateCategory, deleteCategory } from "@/app/lib/category";
+import { S3PutObject } from "@/app/lib/S3";
 
 export async function POST(request) {
-    const session = await getServerSession(options);
-
-    if(!session || !allowedEmails.includes(session?.user?.email)) {
-        return NextResponse.json({ message: 'Access denied' }, { status: 401 });
-    }
 
     const formData = await request.formData();
 
@@ -42,11 +34,6 @@ export async function POST(request) {
 }
 
 export async function PUT(request) {
-    const session = await getServerSession(options);
-
-    if(!session || !allowedEmails.includes(session?.user?.email)) {
-        return NextResponse.json({ message: 'Access denied' }, { status: 401 });
-    }
 
     const formData = await request.formData();
 
@@ -108,11 +95,6 @@ export async function GET(request) {
 }
 
 export async function DELETE(request) {
-    const session = await getServerSession(options);
-
-    if(!session || !allowedEmails.includes(session?.user?.email)) {
-        return NextResponse.json({ message: 'Access denied' }, { status: 401 });
-    }
 
     const formData = await request.formData();
 

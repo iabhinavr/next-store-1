@@ -1,7 +1,7 @@
 import Navigation from "../../components/Navigation";
 import ProductForm from "../../components/ProductForm";
-import { listCategories } from "../../lib/category";
-import { findProductById } from "../../lib/product";
+import { listCategories } from "@/app/lib/category";
+import { findProductById } from "@/app/lib/product";
 
 export default async function EditProduct({ params }) {
 

@@ -1,6 +1,6 @@
 import Navigation from "../components/Navigation";
 import CategoryForm from "../components/CategoryForm";
-import { listCategories } from "../lib/category";
+import { listCategories } from "@/app/lib/category";
 
 export default async function Categories() {
 

@@ -1,8 +1,8 @@
 import Link from "next/link";
 import Navigation from "../components/Navigation";
 import ProductList from "../components/ProductList";
-import { listProducts, getProductsCount } from "../lib/product";
-import { DateReadable } from "../lib/utils";
+import { listProducts, getProductsCount } from "@/app/lib/product";
+import { DateReadable } from "@/app/lib/utils";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -12,8 +12,6 @@ export default async function Products() {
     const limit = 10;
     const products = await listProducts(limit, 0);
     const productsCount = await getProductsCount();
-
-    console.log(products);
 
     let currentPageNo = 1;
     let totalPages = parseInt(productsCount) % limit === 0 ? 

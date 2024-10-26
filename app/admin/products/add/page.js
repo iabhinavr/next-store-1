@@ -1,6 +1,6 @@
 import Navigation from "../../components/Navigation";
 import ProductForm from "../../components/ProductForm";
-import { listCategories } from "../../lib/category";
+import { listCategories } from "@/app/lib/category";
 
 export default async function AddProduct() {
 

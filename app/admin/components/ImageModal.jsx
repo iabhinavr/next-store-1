@@ -64,7 +64,6 @@ export default function ImageModal({ showImageModal, setShowImageModal, productI
      */
 
     useEffect(() => {
-        console.log('selected images');
         setSelectedImages([...productImages.map(image => ({ ...image }))]);
     }, [productImages])
 

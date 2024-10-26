@@ -1,5 +1,5 @@
 import SingleProduct from "@/app/components/SingleProduct"
-import { findProduct } from "@/app/admin/lib/product"
+import { findProduct } from "@/app/lib/product"
 
 export default async function Product({ params }) {
 

@@ -1,15 +1,7 @@
 import { NextResponse } from "next/server";
-import { insertProduct, findProduct, findProductById, listProducts, updateProduct, deleteProduct } from "@/app/admin/lib/product";
-import { getServerSession } from "next-auth";
-import { options } from "../auth/[...nextauth]/options";
-import { allowedEmails } from "../auth/[...nextauth]/options";
+import { insertProduct, findProduct, findProductById, listProducts, updateProduct, deleteProduct } from "@/app/lib/product";
 
 export async function POST(request) {
-    const session = await getServerSession(options);
-
-    if(!session || !allowedEmails.includes(session?.user?.email)) {
-        return NextResponse.json({ message: 'Access denied' }, { status: 401 });
-    }
 
     const formData = await request.formData();
 
@@ -44,11 +36,6 @@ export async function POST(request) {
 }
 
 export async function PUT(request) {
-    const session = await getServerSession(options);
-
-    if(!session || !allowedEmails.includes(session?.user?.email)) {
-        return NextResponse.json({ message: 'Access denied' }, { status: 401 });
-    }
 
     const formData = await request.formData();
 
