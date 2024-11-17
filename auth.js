@@ -11,10 +11,10 @@ const providers = [
             password: {}
         },
         authorize: async (c) => {
-            if(c.password !== 'password' || c.email !== 'test@example.com') {
+            if (c.password !== 'password' || c.email !== 'test@example.com') {
                 return null
             }
-            
+
             return {
                 id: "test",
                 name: "Test User",
@@ -39,7 +39,16 @@ const providers = [
 export const { handlers, signIn, signOut, auth } = NextAuth({
     adapter: MongoDBAdapter(clientPromise),
     providers,
-    // pages: {
-    //     signIn: "/signin",
-    // },
+    callbacks: {
+        async session({ session, token }) {
+            // Add user email to session if it's not already there
+            if (token?.email) {
+                session.user.email = token.email;
+            }
+            return session;
+        },
+        async redirect({ url, baseUrl }) {
+            return "/admin/products"
+        }
+    }
 })

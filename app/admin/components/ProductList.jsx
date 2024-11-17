@@ -26,7 +26,9 @@ export default function ProductList({ productList, currentPageNo, totalPages, it
                     <tbody>
                         {
                             productList.map((p) => {
+                                
                                 slNo++;
+
                                 return (
                                 <tr key={p._id}>
                                     <td>{slNo-1}</td>
@@ -35,7 +37,10 @@ export default function ProductList({ productList, currentPageNo, totalPages, it
                                             {p.title}
                                         </Link>
                                     </td>
-                                    <td>{p.category?.title}</td>
+                                    <td>
+                                        <Link className="text-blue-400 hover:underline" href={`/admin/products?category=${p.category?.slug}`}>{p.category?.title}</Link>
+                                        
+                                        </td>
                                     <td>{p.slug}</td>
                                     <td>
                                         {p.createdAt}

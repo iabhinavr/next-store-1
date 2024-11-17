@@ -37,12 +37,30 @@ export async function findProductById(_id) {
     return product;
 }
 
-export async function listProducts(limit, skip = 0) {
-    mongooseConnect();
+export async function listProducts(limit = 10, offset = 0, filters = null) {
     
     try {
-        const products = await Product.find().populate('category').sort({createdAt: -1}).skip(skip).limit(limit).exec();
+
+        let products;
+
+        mongooseConnect();
+
+        if(filters?.category) {
+            const categorySlugs = filters.category.split(",");
+            
+            const categories = await Category.find({slug: {$in: categorySlugs }}).exec();
+
+            const categoryIds = categories.map((c) => (c._id.toString()));
+
+            products = await Product.find({ category: {$in: categoryIds }}).populate('category').sort({createdAt: -1}).skip(offset).limit(limit).exec();
+
+        }
+        else {
+            products = await Product.find().populate('category').sort({createdAt: -1}).skip(offset).limit(limit).exec();
+        }
+
         return products;
+
     } catch (error) {
         // Handle any errors that occur during the search
         console.error(error);

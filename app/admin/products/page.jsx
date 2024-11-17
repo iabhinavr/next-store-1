@@ -7,10 +7,12 @@ import { DateReadable } from "@/app/lib/utils";
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-export default async function Products() {
+export default async function Products({ searchParams }) {
+
+    const filters = (await searchParams);
 
     const limit = 10;
-    const products = await listProducts(limit, 0);
+    const products = await listProducts(limit, 0, filters);
     const productsCount = await getProductsCount();
 
     let currentPageNo = 1;
