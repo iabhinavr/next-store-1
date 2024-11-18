@@ -78,3 +78,8 @@ table th {
 table th {
     @apply bg-slate-600;
 }
+
+.list-nav li a:disabled,
+.list-nav li a[disabled]  {
+    @apply text-slate-200 opacity-50 border-slate-200 cursor-default;
+}

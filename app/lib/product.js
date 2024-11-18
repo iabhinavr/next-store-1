@@ -37,26 +37,48 @@ export async function findProductById(_id) {
     return product;
 }
 
-export async function listProducts(limit = 10, offset = 0, filters = null) {
+export async function listProducts(searchParams = null) {
     
     try {
+
+        const limit = searchParams?.get('limit') || 10;
+        const page = searchParams?.get('page') || 1;
+        const category = searchParams?.get('category') || null;
+
+        let sortField;
+
+        switch(searchParams?.get("sortField")) {
+            case "title":
+                sortField = "title";
+                break;
+            case "date":
+                sortField = "createdAt";
+                break;
+            default:
+                sortField = "createdAt";
+        }
+
+        let sortOrder = searchParams?.get("sortOrder") == 'ASC' ? 1 : -1;
+        let sortBy = {[sortField]: sortOrder};
+
+        let offset = (page - 1) * limit;
 
         let products;
 
         mongooseConnect();
 
-        if(filters?.category) {
-            const categorySlugs = filters.category.split(",");
+        if(category) {
+            const categorySlugs = category.split(",");
             
             const categories = await Category.find({slug: {$in: categorySlugs }}).exec();
 
             const categoryIds = categories.map((c) => (c._id.toString()));
 
-            products = await Product.find({ category: {$in: categoryIds }}).populate('category').sort({createdAt: -1}).skip(offset).limit(limit).exec();
+            products = await Product.find({ category: {$in: categoryIds }}).populate('category').sort(sortBy).skip(offset).limit(limit).exec();
 
         }
         else {
-            products = await Product.find().populate('category').sort({createdAt: -1}).skip(offset).limit(limit).exec();
+            products = await Product.find().populate('category').sort(sortBy).skip(offset).limit(limit).exec();
         }
 
         return products;
@@ -94,15 +116,28 @@ export async function deleteProduct(_id) {
     }
 }
 
-export async function getProductsCount() {
-    mongooseConnect();
+export async function getProductsCount(searchParams = null) {
 
     try {
-        const count = await Product.find().countDocuments().exec();
-        if(count) {
+
+        mongooseConnect();
+
+        const category = searchParams?.get('category') || null;
+        let count = 0;
+
+        if(category) {
+            const categorySlugs = category.split(",");
+
+            const categories = await Category.find({slug: {$in: categorySlugs }}).exec();
+            const categoryIds = categories.map((c) => (c._id.toString()));
+
+            count = await Product.find({ category: {$in: categoryIds }}).countDocuments().exec();
             return count;
         }
-        return false;
+
+        count = await Product.find().countDocuments().exec();
+        
+        return count;
     }
     catch(error) {
         return false;
