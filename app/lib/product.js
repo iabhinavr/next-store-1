@@ -44,6 +44,7 @@ export async function listProducts(searchParams = null) {
         const limit = searchParams?.get('limit') || 10;
         const page = searchParams?.get('page') || 1;
         const category = searchParams?.get('category') || null;
+        const searchTerm = searchParams?.get('searchTerm') || null;
 
         let sortField;
 
@@ -76,6 +77,10 @@ export async function listProducts(searchParams = null) {
 
             products = await Product.find({ category: {$in: categoryIds }}).populate('category').sort(sortBy).skip(offset).limit(limit).exec();
 
+        }
+        else if(searchTerm) {
+            const regex = new RegExp(searchTerm, 'i');
+            products = await Product.find({ title: {$regex: regex }}).populate('category').sort(sortBy).skip(offset).limit(limit).exec();
         }
         else {
             products = await Product.find().populate('category').sort(sortBy).skip(offset).limit(limit).exec();
@@ -123,6 +128,8 @@ export async function getProductsCount(searchParams = null) {
         mongooseConnect();
 
         const category = searchParams?.get('category') || null;
+        const searchTerm = searchParams?.get('searchTerm') || null;
+
         let count = 0;
 
         if(category) {
@@ -132,6 +139,11 @@ export async function getProductsCount(searchParams = null) {
             const categoryIds = categories.map((c) => (c._id.toString()));
 
             count = await Product.find({ category: {$in: categoryIds }}).countDocuments().exec();
+            return count;
+        }
+        else if(searchTerm) {
+            const regex = new RegExp(searchTerm, 'i');
+            count = await Product.find({ title: {$regex: regex }}).countDocuments().exec();
             return count;
         }
 

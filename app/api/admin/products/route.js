@@ -8,7 +8,6 @@ export async function GET(request) {
 
     const products = await listProducts(filters);
     const productsCount = await getProductsCount(filters);
-    console.log(productsCount);
 
     const productsSimple = products.map((p) => (
         {

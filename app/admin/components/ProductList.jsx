@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import ProductSearch from "./ProductSearch";
 
 export default function ProductList({ paramFilters = null }) {
 
@@ -30,13 +31,17 @@ export default function ProductList({ paramFilters = null }) {
                     Math.ceil(parseInt(result?.count) / limit);
             }
 
-
             setProductList(result?.products);
             setTotalPages(totalPages);
         }
 
         fetchProducts();
 
+    }, [filters])
+
+    useEffect(() => {
+        let searchParams = new URLSearchParams(filters).toString();
+        router.push(`/admin/products?${searchParams}`);
     }, [filters])
 
     function getNavParams(params) {
@@ -65,19 +70,19 @@ export default function ProductList({ paramFilters = null }) {
 
         // if it is repeating click on the same field, toggle sortBy
 
-        if(sortField == filters?.sortField) {
+        if (sortField == filters?.sortField) {
             console.log('clicking same field');
             sortOrder = filters?.sortOrder === 'ASC' ? 'DESC' : 'ASC';
         }
 
-        setFilters({...filters, ...{page, sortField, sortOrder}});
+        setFilters({ ...filters, ...{ page, sortField, sortOrder } });
 
-        let searchParams = new URLSearchParams({...filters, ...{page, sortField, sortOrder}}).toString();
-        router.push(`/admin/products?${searchParams}`);
     }
 
-
-
+    function resetFilters(e) {
+        setFilters({});
+        router.push("/admin/products");
+    }
 
 
     return (
@@ -89,61 +94,69 @@ export default function ProductList({ paramFilters = null }) {
                     <Link href="/admin/products/add" className="btn-primary">Add New Product</Link>
                 </div>
 
-                {
-                    (parseInt(filters?.page) > 1 || filters?.category || filters?.sortField) &&
-                    <div className="font-mono">
-                        <span>{`{`}</span>
+                <div className="filters-area flex justify-between">
+
+                    <div className="filters-left flex justify-start items-center">
                         {
-                            Object.entries(filters).map((entry, index) => {
-                                return (
-                                    <span key={index}>
-                                        <span>{entry[0]}: </span>
-                                        <span className="text-green-500">{entry[1]}</span>
-                                        {
-                                            index < Object.keys(filters).length - 1 &&
-                                            <span>, </span>
-                                        }
-                                    </span>
-                                )
-                            })
+                            (parseInt(filters?.page) > 1 || filters?.category || filters?.sortField || filters?.searchTerm) &&
+                            <>
+                                <div className="font-mono">
+                                    <span>{`{`}</span>
+                                    {
+                                        Object.entries(filters).map((entry, index) => {
+                                            return (
+                                                <span key={index}>
+                                                    <span>{entry[0]}: </span>
+                                                    <span className="text-green-500">{entry[1]}</span>
+                                                    {
+                                                        index < Object.keys(filters).length - 1 &&
+                                                        <span>, </span>
+                                                    }
+                                                </span>
+                                            )
+                                        })
+                                    }
+                                    <span>{`}`}</span>
+                                </div>
+                                <button className="p-2 bg-slate-700 border border-slate-400 text-slate-200 text-sm rounded-md ml-4" onClick={resetFilters}>reset all filters</button>
+                            </>
                         }
-                        <span>{`}`}</span>
-                        <button className="p-1 bg-slate-200 text-slate-900 text-sm rounded-xl ml-4" onClick={() => (setFilters({}))}>X close filters</button>
                     </div>
-                }
+                    <ProductSearch filters={filters} setFilters={setFilters} />
+                </div>
 
                 <table className="my-3">
 
                     <thead>
                         <tr>
                             <th>No</th>
-                            <th 
-                            data-sort-field="title" 
-                            onClick={onSortClick}
-                            className={`flex justify-between items-center ${filters?.sortField == 'title' ? 'bg-slate-800' : ''}`}
+                            <th
+                                data-sort-field="title"
+                                onClick={onSortClick}
+                                className={`flex justify-between items-center ${filters?.sortField == 'title' ? 'bg-slate-800' : ''}`}
                             >
                                 Title
-                                <span 
-                                className={`sort-arrow ${filters?.sortField == 'title' ? 'block' : 'hidden'} ${filters?.sortOrder == 'ASC' ? 'rotate-0' : 'rotate-180'}`}
+                                <span
+                                    className={`sort-arrow ${filters?.sortField == 'title' ? 'block' : 'hidden'} ${filters?.sortOrder == 'ASC' ? 'rotate-0' : 'rotate-180'}`}
                                 >
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-arrow-down" viewBox="0 0 16 16">
-                                        <path d="M8 1a.5.5 0 0 1 .5.5v11.793l3.146-3.147a.5.5 0 0 1 .708.708l-4 4a.5.5 0 0 1-.708 0l-4-4a.5.5 0 0 1 .708-.708L7.5 13.293V1.5A.5.5 0 0 1 8 1"/>
+                                        <path d="M8 1a.5.5 0 0 1 .5.5v11.793l3.146-3.147a.5.5 0 0 1 .708.708l-4 4a.5.5 0 0 1-.708 0l-4-4a.5.5 0 0 1 .708-.708L7.5 13.293V1.5A.5.5 0 0 1 8 1" />
                                     </svg>
                                 </span>
                             </th>
                             <th>Category</th>
                             <th>Slug</th>
-                            <th 
-                            data-sort-field="date"  
-                            onClick={onSortClick}
-                            className={`flex justify-between items-center ${filters?.sortField == 'date' ? 'bg-slate-800' : ''}`}
+                            <th
+                                data-sort-field="date"
+                                onClick={onSortClick}
+                                className={`flex justify-between items-center ${filters?.sortField == 'date' ? 'bg-slate-800' : ''}`}
                             >
                                 Date Created
-                                <span 
-                                className={`sort-arrow ${filters?.sortField == 'date' ? 'block' : 'hidden'} ${filters?.sortOrder == 'ASC' ? 'rotate-0' : 'rotate-180'}`}
+                                <span
+                                    className={`sort-arrow ${filters?.sortField == 'date' ? 'block' : 'hidden'} ${filters?.sortOrder == 'ASC' ? 'rotate-0' : 'rotate-180'}`}
                                 >
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-arrow-down" viewBox="0 0 16 16">
-                                        <path d="M8 1a.5.5 0 0 1 .5.5v11.793l3.146-3.147a.5.5 0 0 1 .708.708l-4 4a.5.5 0 0 1-.708 0l-4-4a.5.5 0 0 1 .708-.708L7.5 13.293V1.5A.5.5 0 0 1 8 1"/>
+                                        <path d="M8 1a.5.5 0 0 1 .5.5v11.793l3.146-3.147a.5.5 0 0 1 .708.708l-4 4a.5.5 0 0 1-.708 0l-4-4a.5.5 0 0 1 .708-.708L7.5 13.293V1.5A.5.5 0 0 1 8 1" />
                                     </svg>
                                 </span>
                             </th>
