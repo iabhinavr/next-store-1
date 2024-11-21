@@ -1,4 +1,6 @@
 import { S3, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { PutObjectAclCommand } from "@aws-sdk/client-s3";
 
 const bucket = process.env.AWS_BUCKET;
 const aws_access_key = process.env.AWS_ACCESS_KEY;
@@ -17,6 +19,45 @@ const S3Client = new S3({
         secretAccessKey: spaces_secret_key
     }
 });
+
+export async function generateSignedUrl({name, type}) {
+
+    const bucketParams = {
+        Bucket: spaces_bucket,
+        Key: name,
+        ACL: "public-read",
+        ContentType: type
+    }
+    const command = new PutObjectCommand(bucketParams);
+
+    try {
+        const url = await getSignedUrl(S3Client, command, { expiresIn: 3600 });
+        return url;
+    }
+    catch(error) {
+        console.log(error);
+        return {error: "cannot generate signed url"}
+    }
+}
+
+export async function makeObjectPublic(key) {
+    const bucketParams = {
+        Bucket: spaces_bucket,
+        Key: key,
+        ACL: "public-read"
+    }
+
+    const command = new PutObjectAclCommand(bucketParams);
+
+    try {
+        const data = await S3Client.send(command);
+        console.log(data);
+    }
+    catch(error) {
+        console.log(error);
+        return false;
+    }
+}
 
 export async function S3PutObject(fileName, fileType, buffer) {
 

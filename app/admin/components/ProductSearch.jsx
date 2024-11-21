@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 
 export default function ProductSearch({ filters, setFilters }) {
 
-    const [searchTerm, setSearchTerm] = useState("");
+    const [searchTerm, setSearchTerm] = useState(filters?.searchTerm || "");
 
     /**
      * The purpose of this component is to delay invoking search

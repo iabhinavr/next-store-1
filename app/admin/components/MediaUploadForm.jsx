@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from "react";
+import { resizeImage } from "@/app/lib/image";
 
 export default function MediaUploadForm({ images, setImages, loadedImages = 0, setLoadedImages = false}) {
 
@@ -17,6 +18,76 @@ export default function MediaUploadForm({ images, setImages, loadedImages = 0, s
         setStatusColor('bg-yellow-700 border-yellow-500');
 
         const formData = new FormData(ev.target);
+        const image = formData.get("product-images");
+        
+        const fileData = {
+            name: image.name,
+            type: image.type,
+        }
+
+        try {
+            const signedUrlReq = await fetch("/api/signed-url", {
+                method: 'POST',
+                body: JSON.stringify(fileData),
+            });
+    
+            const { signedUrl } = await signedUrlReq.json();
+
+            const resizedImage = await resizeImage(image);
+
+            const xhr = new XMLHttpRequest();
+            xhr.open("PUT", signedUrl, true);
+            xhr.setRequestHeader("Content-Type", fileData.type);
+
+            xhr.onreadystatechange = async () => {
+                if(xhr.status === 200) {
+                    const res = await fetch("/api/make-object-public", {
+                        method: 'POST',
+                        body: JSON.stringify({key: fileData.name}),
+                    });
+    
+                    console.log(res);
+                }
+            }
+
+            xhr.upload.onprogress = (event) => {
+                if(event.lengthComputable) {
+                    console.log("length computable");
+                }
+                else {
+                    console.log("length not computable");
+                }
+                console.log(`${event.loaded} / ${event.total}`);
+            }
+
+            xhr.send(resizedImage);
+
+            // const upload = await fetch(signedUrl, {
+            //     method: 'PUT',
+            //     headers: {
+            //         "Content-Type": fileData.type,
+            //     },
+            //     body: resizedImage
+            // });
+
+            // if(upload.ok) {
+
+            //     const res = await fetch("/api/make-object-public", {
+            //         method: 'POST',
+            //         body: JSON.stringify({key: fileData.name}),
+            //     });
+
+            //     console.log(res);
+
+            // }
+            
+            
+        }
+        catch(error) {
+            console.log(error.message);
+        }
+
+        return;
 
         const response = await fetch("/api/images", {
             method: 'POST',

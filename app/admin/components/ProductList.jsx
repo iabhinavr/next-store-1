@@ -107,7 +107,7 @@ export default function ProductList({ paramFilters = null }) {
                                             return (
                                                 <span key={index}>
                                                     <span>{entry[0]}: </span>
-                                                    <span className="text-green-500">{entry[1]}</span>
+                                                    <span className="text-emerald-500">{entry[1]}</span>
                                                     {
                                                         index < Object.keys(filters).length - 1 &&
                                                         <span>, </span>
@@ -133,11 +133,11 @@ export default function ProductList({ paramFilters = null }) {
                             <th
                                 data-sort-field="title"
                                 onClick={onSortClick}
-                                className={`flex justify-between items-center ${filters?.sortField == 'title' ? 'bg-slate-800' : ''}`}
+                                className={`flex justify-between items-center hover:bg-slate-800 ${filters?.sortField == 'title' ? 'bg-slate-800' : ''}`}
                             >
                                 Title
                                 <span
-                                    className={`sort-arrow ${filters?.sortField == 'title' ? 'block' : 'hidden'} ${filters?.sortOrder == 'ASC' ? 'rotate-0' : 'rotate-180'}`}
+                                    className={`sort-arrow ${(filters?.sortField == 'title') && 'text-emerald-500'} ${(filters?.sortField == 'title') && (filters?.sortOrder == 'DESC') && 'rotate-180'}`}
                                 >
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-arrow-down" viewBox="0 0 16 16">
                                         <path d="M8 1a.5.5 0 0 1 .5.5v11.793l3.146-3.147a.5.5 0 0 1 .708.708l-4 4a.5.5 0 0 1-.708 0l-4-4a.5.5 0 0 1 .708-.708L7.5 13.293V1.5A.5.5 0 0 1 8 1" />
@@ -149,11 +149,11 @@ export default function ProductList({ paramFilters = null }) {
                             <th
                                 data-sort-field="date"
                                 onClick={onSortClick}
-                                className={`flex justify-between items-center ${filters?.sortField == 'date' ? 'bg-slate-800' : ''}`}
+                                className={`flex justify-between items-center hover:bg-slate-800 group ${filters?.sortField == 'date' ? 'bg-slate-800' : ''}`}
                             >
                                 Date Created
                                 <span
-                                    className={`sort-arrow ${filters?.sortField == 'date' ? 'block' : 'hidden'} ${filters?.sortOrder == 'ASC' ? 'rotate-0' : 'rotate-180'}`}
+                                    className={`sort-arrow ${(filters?.sortField == 'date') && 'text-emerald-500'} ${(filters?.sortField == 'date') && (filters?.sortOrder == 'DESC') && 'rotate-180'}`}
                                 >
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-arrow-down" viewBox="0 0 16 16">
                                         <path d="M8 1a.5.5 0 0 1 .5.5v11.793l3.146-3.147a.5.5 0 0 1 .708.708l-4 4a.5.5 0 0 1-.708 0l-4-4a.5.5 0 0 1 .708-.708L7.5 13.293V1.5A.5.5 0 0 1 8 1" />
