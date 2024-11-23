@@ -8,6 +8,7 @@ export default function MediaList() {
 
     const [images, setImages] = useState([]);
     const [deleteId, setDeleteId] = useState('');
+    const [progressBar, setProgressBar] = useState([]);
 
     async function deleteMedia(ev) {
         ev.preventDefault();
@@ -53,7 +54,7 @@ export default function MediaList() {
                     _id: m._id.toString(),
                     origPath: m.origPath,
                     webpPath: m.webpPath,
-                    createdAt: DateReadable(m.createdAt.toString())
+                    createdAt: m.createdAt
                 }
             ));
 
@@ -71,7 +72,7 @@ export default function MediaList() {
 
             </div>
 
-            <MediaUploadForm images={images} setImages={setImages} />
+            <MediaUploadForm progressBar={progressBar} setProgressBar={setProgressBar} images={images} setImages={setImages} />
 
             <table className="my-3">
 
@@ -87,6 +88,36 @@ export default function MediaList() {
                 </thead>
 
                 <tbody>
+
+                    {
+                        progressBar.map((p) => (
+                            <tr key={p.key}>
+                                <td>
+                                    <img src={p.imagePreview} className="w-20 h-20 rounded-md object-cover" />
+                                </td>
+                                <td colSpan={3}>
+                                    <div className="w-full h-full flex justify-start items-center progress-bar-wrapper">
+                                        <div className="relative flex justify-center items-center progress-bar bg-slate-300 overflow-clip w-40 h-6 rounded-md">
+                                            <span className="relative z-10 text-slate-900">
+                                                {parseInt((p.uploaded / (p.total || 1)) * 100)}%
+                                            </span>
+                                            <div className=" absolute left-0 top-0 bg-emerald-400 progress-slider h-full" style={{ width: `${parseInt((p.uploaded / (p.total || 1)) * 100)}%` }}></div>
+                                        </div>
+                                        <div className="ml-2">
+                                            <span className="font-mono text-yellow-500">
+                                                {p.key}
+                                            </span>
+                                            {
+                                                p?.message &&
+                                                <span className="ml-2 font-mono text-sm italic text-slate-400">{p.message}</span>
+                                            }
+                                        </div>
+                                    </div>
+
+                                </td>
+                            </tr>
+                        ))
+                    }
                     {
                         images.map((m) => {
 
@@ -100,7 +131,7 @@ export default function MediaList() {
                                     </td>
 
                                     <td>
-                                        {m.createdAt}
+                                        {DateReadable(m.createdAt)}
                                     </td>
                                     <td>
                                         <button data-media-id={m._id} onClick={deleteMedia} className="btn-danger" disabled={m._id === deleteId ? true : false}>{m._id === deleteId ? 'Deleting...' : 'Delete'}</button>

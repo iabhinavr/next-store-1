@@ -5,11 +5,11 @@ export async function POST(request) {
     const data = await request.json();
 
     if(!data.key) {
-        return NextResponse.json({message: "Invalid Request"});
+        return NextResponse.json({success: false, message: "Invalid Request"});
     }
 
     const res = await makeObjectPublic(data.key);
     console.log(res);
 
-    return NextResponse.json({message: "Object made public"});
+    return NextResponse.json({success: true, message: "Object made public"});
 }

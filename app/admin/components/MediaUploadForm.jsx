@@ -1,15 +1,14 @@
 'use client';
 
 import { useEffect, useRef, useState } from "react";
-import { resizeImage } from "@/app/lib/image";
+import { getImagePreview, resizeImage } from "@/app/lib/image";
 
-export default function MediaUploadForm({ images, setImages, loadedImages = 0, setLoadedImages = false}) {
+export default function MediaUploadForm({ progressBar, setProgressBar, images, setImages, loadedImages = 0, setLoadedImages = false }) {
 
     const [uploadedFile, setUploadedFile] = useState(false);
     const [uploadStatus, setUploadStatus] = useState(false);
     const [uploadMessage, setUploadMessage] = useState('');
     const [statusColor, setStatusColor] = useState('');
-    const [progressBar, setProgressBar] = useState([]);
 
     const versions = useRef([]);
     const progressBarRef = useRef([]);
@@ -20,28 +19,28 @@ export default function MediaUploadForm({ images, setImages, loadedImages = 0, s
     }, [progressBar])
 
     function getFileInfo(file) {
-    
+
         const fileName = file.name;
         const mimeType = file.type;
         const fileNameNoExt = file.name.slice(0, file.name.lastIndexOf("."));
         const currentDate = new Date();
         const currentYear = currentDate.getFullYear();
-    
+
         const currentMonth = (currentDate.getMonth() + 1).toString().padStart(2, '0');
         const folderPath = currentYear + "/" + currentMonth;
 
         const origPath = `${folderPath}/${fileName}`;
         const webpPath = `${folderPath}/${fileNameNoExt}.webp`;
-    
+
         const fileInfo = {
-           fileName,
-           origPath,
-           webpPath,
-           fileNameNoExt,
-           folderPath,
-           mimeType,
+            fileName,
+            origPath,
+            webpPath,
+            fileNameNoExt,
+            folderPath,
+            mimeType,
         }
-    
+
         return fileInfo;
     }
 
@@ -50,122 +49,122 @@ export default function MediaUploadForm({ images, setImages, loadedImages = 0, s
         try {
             const signedUrlReq = await fetch("/api/signed-url", {
                 method: 'POST',
-                body: JSON.stringify({key, mimeType}),
+                body: JSON.stringify({ key, mimeType }),
             });
-    
+
             const { signedUrl } = await signedUrlReq.json();
-    
+
             return signedUrl;
         }
-        catch(error) {
+        catch (error) {
             return false;
         }
-        
+
     }
 
     async function uploadImageObject(origPath, index) {
 
-        /**
-         * to set the common progress bar for all the four thumbnails
-         */
+        return new Promise((resolve, reject) => {
 
-        progressBarRef.current[origPath].uploaded = 0;
+            const xhr = new XMLHttpRequest();
+            xhr.open("PUT", versions.current[origPath][index].signedUrl, true);
+            xhr.setRequestHeader("Content-Type", versions.current[origPath][index].mimeType);
 
-        // now upload
-
-        const xhr = new XMLHttpRequest();
-        xhr.open("PUT", versions.current[origPath][index].signedUrl, true);
-        xhr.setRequestHeader("Content-Type", versions.current[origPath][index].mimeType);
-
-        xhr.onreadystatechange = async () => {
-            if(xhr.status === 200) {
-                const res = await fetch("/api/make-object-public", {
-                    method: 'POST',
-                    body: JSON.stringify({ key: versions.current[origPath][index].key }),
-                });
-
+            xhr.onreadystatechange = async () => {
+                if (xhr.status === 200) {
+                    resolve();
+                }
+                else {
+                    reject(new Error(`Upload failed. ${xhr.statusText}`));
+                }
             }
-        }
 
-        xhr.upload.onprogress = (event) => {
-            
-            if(event.lengthComputable) {
-                
+            xhr.upload.onprogress = (event) => {
+
+                if (event.lengthComputable) {
+                    console.log(`${index} - ${event.loaded} / ${event.total}`);
+                    versions.current[origPath][index].sizeUploaded = event.loaded;
+    
+                    let currentTotalUploaded = 0;
+    
+                    versions.current[origPath].map((v) => {
+                        currentTotalUploaded += v.sizeUploaded;
+                    });
+    
+                    setProgressBar((prevProgress) => {
+    
+                        return prevProgress.map((item) => {
+                            if (item.key === origPath) {
+                                return { ...item, uploaded: currentTotalUploaded };
+                            }
+                            else {
+                                return item;
+                            }
+                        })
+                    })
+                }
             }
-            else {
-                
-            }
-            console.log(`${index} - ${event.loaded} / ${event.total}`);
-            versions.current[origPath][index].sizeUploaded = event.loaded; 
 
-            let currentTotalUploaded = 0;
-            
-            versions.current[origPath].map((v) => {
-                currentTotalUploaded += v.sizeUploaded;
-            });
-
-            setProgressBar((prevProgress) => {
-
-                return prevProgress.map((item) => {
-                    if(item.key === origPath) {
-                        return {...item, uploaded: currentTotalUploaded};
-                    }
-                    else {
-                        return item;
-                    }
-                })
-            })
-
-        }
-
-        xhr.send(versions.current[origPath][index].imageBlob);
+            xhr.send(versions.current[origPath][index].imageBlob);
+        });
     }
 
     async function addImage(image) {
 
         const fileInfo = getFileInfo(image);
-        progressBarRef.current[fileInfo.origPath] = {uploaded: 0, total: 0};
+
+        const allowedTypes = ["image/jpeg", "image/jpg", "image/png"];
+        if(!allowedTypes.includes(fileInfo.mimeType)) {
+            throw new Error(`${fileInfo.mimeType} is not a supported image format`);
+        }
+        const imagePreview = await getImagePreview(image);
+
+        progressBarRef.current[fileInfo.origPath] = { uploaded: 0, total: 0 };
 
         versions.current[fileInfo.origPath] = [
             {
                 title: "fullsize",
                 fileName: fileInfo.fileName,
-                width: null, 
-                mimeType: fileInfo.mimeType, 
-                key: `${fileInfo.origPath}`, 
-                sizeTotal: 0, 
+                width: null,
+                mimeType: fileInfo.mimeType,
+                key: `${fileInfo.origPath}`,
+                sizeTotal: 0,
                 sizeUploaded: 0
             },
             {
                 title: "fullsize-webp",
                 fileName: fileInfo.fileName,
-                width: null, 
-                mimeType: "image/webp", 
+                width: null,
+                mimeType: "image/webp",
                 key: `${fileInfo.webpPath}`,
-                sizeTotal: 0, 
+                sizeTotal: 0,
                 sizeUploaded: 0
             },
             {
                 title: "thumbnail",
-                fileName: fileInfo.fileName, 
-                width: 600, 
-                mimeType: fileInfo.mimeType, 
-                key: `thumbnails/${fileInfo.origPath}`, 
-                sizeTotal: 0, 
+                fileName: fileInfo.fileName,
+                width: 600,
+                mimeType: fileInfo.mimeType,
+                key: `thumbnails/${fileInfo.origPath}`,
+                sizeTotal: 0,
                 sizeUploaded: 0
             },
             {
                 title: "thumbnail-webp",
-                fileName: fileInfo.fileName, 
-                width: 600, 
-                mimeType: "image/webp", 
-                key: `thumbnails/${fileInfo.webpPath}`, 
+                fileName: fileInfo.fileName,
+                width: 600,
+                mimeType: "image/webp",
+                key: `thumbnails/${fileInfo.webpPath}`,
                 sizeTotal: 0,
                 sizeUploaded: 0
             }
         ];
 
-       const resizePromises = versions.current[fileInfo.origPath].map(async (v, i) => {
+        setProgressBar((prevProgress) => ([
+            ...prevProgress, { key: fileInfo.origPath, uploaded: 0, total: 0, imagePreview, message: 'generating thumbnails...' }
+        ]));
+
+        const resizePromises = versions.current[fileInfo.origPath].map(async (v, i) => {
             const imageBlob = await resizeImage(image, v.width, v.mimeType);
             versions.current[fileInfo.origPath][i].imageBlob = imageBlob;
             versions.current[fileInfo.origPath][i].sizeTotal = imageBlob.size;
@@ -182,25 +181,79 @@ export default function MediaUploadForm({ images, setImages, loadedImages = 0, s
 
         let totalSize = 0;
 
-        versions.current[fileInfo.origPath].map(async(v) => {
+        versions.current[fileInfo.origPath].map(async (v) => {
 
             totalSize += v.sizeTotal;
             progressBarRef.current[fileInfo.origPath].total += v.sizeTotal;
         });
 
-        setProgressBar((prevProgress) => ([
-            ...prevProgress, {key: fileInfo.origPath, uploaded: 0, total: totalSize}
-        ]));
+        setProgressBar((prevProgress) => {
+            return prevProgress.map((item) => {
+                if(item.key === fileInfo.origPath) {
+                    return {...item, total: totalSize, message: "uploading to storage..."}
+                }
+                else {
+                    return item;
+                }
+            })
+        });
 
         const uploadPromises = versions.current[fileInfo.origPath].map(async (v, i) => {
             const signedUrl = await getSignedUrl(v.key, v.mimeType);
             versions.current[fileInfo.origPath][i].signedUrl = signedUrl;
-            uploadImageObject(fileInfo.origPath, i);
+            await uploadImageObject(fileInfo.origPath, i);
         });
 
-        await Promise.all(uploadPromises);
+        try {
+            await Promise.all(uploadPromises);
 
-        return {fileInfo};
+            setProgressBar((prevProgress) => {
+                return prevProgress.map((item) => {
+                    if(item.key === fileInfo.origPath) {
+                        return {...item, message: "adding metadata..."}
+                    }
+                    else {
+                        return item;
+                    }
+                })
+            })
+
+            const makePublicPromises = versions.current[fileInfo.origPath].map(async(v,i) => {
+                await fetch("/api/make-object-public", {
+                    method: 'POST',
+                    body: JSON.stringify({ key: v.key }),
+                });
+            });
+
+            await Promise.all(makePublicPromises);
+
+            setProgressBar((prevProgress) => {
+                return prevProgress.map((item) => {
+                    if(item.key === fileInfo.origPath) {
+                        return {...item, message: "saving details..."}
+                    }
+                    else {
+                        return item;
+                    }
+                })
+            })
+
+            const res = await fetch("/api/images", {
+                method: 'POST',
+                body: JSON.stringify({ origPath: fileInfo.origPath, webpPath: fileInfo.webpPath }),
+            });
+
+            const { image } = await res.json();
+
+            setProgressBar((prevProgress) => {
+                return prevProgress.filter((p) => (p.key !== image.origPath));
+            })
+
+            return { success: true, image };
+        }
+        catch (error) {
+            return { success: false, error: error.message };
+        }
 
     }
 
@@ -212,58 +265,37 @@ export default function MediaUploadForm({ images, setImages, loadedImages = 0, s
         setStatusColor('bg-yellow-700 border-yellow-500');
 
         const formData = new FormData(ev.target);
-        const image = formData.get("product-images");
-        
-        const {fileInfo} = await addImage(image);
+        const inputImages = formData.getAll("product-images");
 
-        const res = await fetch("/api/images", {
-            method: 'POST',
-            body: JSON.stringify({origPath: `${fileInfo.folderPath}/${fileInfo.fileName}`, webpPath: `${fileInfo.folderPath}/${fileInfo.fileNameNoExt}.webp`}),
+        const addImagesPromises = inputImages.map(async(inputImage) => {
+
+            const addImageResult = await addImage(inputImage);
+            if (addImageResult.success) {
+
+                setImages((prevImages) => ([addImageResult.image, ...prevImages]));
+                
+            }
         });
 
-        return;
-
-        const response = await fetch("/api/images", {
-            method: 'POST',
-            body: formData
-        });
-
-        const result = await response.json();
-
-        switch (result.uploadStatus) {
-            case 'success':
-                setUploadStatus('success');
-                setUploadedFile(result.url);
-                // setLoadedImages(loadedImages + 1);
-
-                setImages([result.image, ...images]);
-
-                setUploadMessage('File uploaded successfully.');
-                setStatusColor('bg-teal-700 border-teal-500');
-                break;
-            case 'exists':
-                setUploadStatus('exists');
-                setUploadMessage('File already exists.');
-                setStatusColor('bg-orange-600 border-orange-400');
-                break;
-            case 'error':
-                setUploadStatus('error');
-                setUploadMessage(result.message);
-                setStatusColor('bg-red-600 border-red-400');
-                break;
+        try {
+            await Promise.all(addImagesPromises);
+            ev.target.reset();
+            setUploadStatus('success');
+            setUploadMessage('all files uploaded successfully');
+            setStatusColor('bg-teal-700 border-teal-500');
         }
-
-        setTimeout(() => {
-            setUploadStatus(false);
-            setUploadedFile(false);
-        }, 2500)
+        catch(error) {
+            setUploadStatus('error');
+            setUploadMessage(`error uploading files - ${error.message}`);
+            setStatusColor('bg-red-700 border-red-500');
+        }
     }
 
     return (
         <>
             <form onSubmit={handleOnSubmit} action="" encType="multipart/form-data" method="post">
                 <label htmlFor="product-images" className="block py-2 text-lg">Upload new image:</label>
-                <input type="file" name="product-images" id="product-images" />
+                <input type="file" name="product-images" id="product-images" multiple />
                 <button type="submit" className="btn-primary">Upload</button>
             </form>
 
@@ -271,23 +303,8 @@ export default function MediaUploadForm({ images, setImages, loadedImages = 0, s
                 uploadStatus &&
 
                 <div className={`${statusColor} border rounded-md py-2 px-3 my-2 text-sm inline-block`}>
-                    {uploadMessage} &nbsp;
-                    {
-                        uploadStatus === 'success' &&
-                        <span>View: <a href={`${uploadedFile}`} className="underline">{uploadedFile}</a></span>
-
-                    }
+                    {uploadMessage}
                 </div>
-            }
-            { 
-                <div className="progressBar">
-                    {progressBar.map((p,i) => (
-                        <div key={p.key}>
-                            uploading {p.key} - { parseInt((p.uploaded/p.total)*100)}% complete
-                        </div>
-                    ))}
-                </div>
-                
             }
         </>
     )

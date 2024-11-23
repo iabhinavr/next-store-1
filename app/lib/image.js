@@ -2,6 +2,20 @@ import Pica from "pica";
 
 const pica = new Pica();
 
+export const getImagePreview = async (image) => {
+
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+
+        reader.onload = (e) => {
+            resolve(e.target.result)
+        }
+    
+        reader.readAsDataURL(image);
+    })
+    
+}
+
 export const resizeImage = async(file, targetWidth = null, mimeType = "image/jpeg", quality = "0.8") => {
 
     const reader = new FileReader();
