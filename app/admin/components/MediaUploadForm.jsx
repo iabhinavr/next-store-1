@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { resizeImage } from "@/app/lib/image";
 
 export default function MediaUploadForm({ images, setImages, loadedImages = 0, setLoadedImages = false}) {
@@ -13,6 +13,11 @@ export default function MediaUploadForm({ images, setImages, loadedImages = 0, s
 
     const versions = useRef([]);
     const progressBarRef = useRef([]);
+
+    useEffect(() => {
+        console.log('progressBar changed');
+        console.log(progressBar);
+    }, [progressBar])
 
     function getFileInfo(file) {
     
@@ -30,6 +35,8 @@ export default function MediaUploadForm({ images, setImages, loadedImages = 0, s
     
         const fileInfo = {
            fileName,
+           origPath,
+           webpPath,
            fileNameNoExt,
            folderPath,
            mimeType,
@@ -56,74 +63,76 @@ export default function MediaUploadForm({ images, setImages, loadedImages = 0, s
         
     }
 
-    async function uploadImageObject(index) {
+    async function uploadImageObject(origPath, index) {
 
         /**
          * to set the common progress bar for all the four thumbnails
          */
 
-        const fileName = versions.current[index].fileName;
-        progressBarRef.current[fileName].uploaded = 0;
+        progressBarRef.current[origPath].uploaded = 0;
 
         // now upload
 
         const xhr = new XMLHttpRequest();
-        xhr.open("PUT", versions.current[index].signedUrl, true);
-        xhr.setRequestHeader("Content-Type", versions.current[index].mimeType);
+        xhr.open("PUT", versions.current[origPath][index].signedUrl, true);
+        xhr.setRequestHeader("Content-Type", versions.current[origPath][index].mimeType);
 
         xhr.onreadystatechange = async () => {
             if(xhr.status === 200) {
                 const res = await fetch("/api/make-object-public", {
                     method: 'POST',
-                    body: JSON.stringify({ key: versions.current[index].key }),
+                    body: JSON.stringify({ key: versions.current[origPath][index].key }),
                 });
 
-                console.log(res);
             }
         }
 
         xhr.upload.onprogress = (event) => {
-            let currentTotalUploaded = 0;
+            
             if(event.lengthComputable) {
-                //console.log("length computable");
+                
             }
             else {
-                //console.log("length not computable");
+                
             }
-            //console.log(`${event.loaded} / ${event.total}`);
-            versions.current[index].sizeUploaded = event.loaded;
+            console.log(`${index} - ${event.loaded} / ${event.total}`);
+            versions.current[origPath][index].sizeUploaded = event.loaded; 
 
-            versions.current.map((v) => {
+            let currentTotalUploaded = 0;
+            
+            versions.current[origPath].map((v) => {
                 currentTotalUploaded += v.sizeUploaded;
             });
 
-            progressBarRef.current[fileName].uploaded = currentTotalUploaded;
-            let currentProgressInPercentage = parseInt((progressBarRef.current[fileName].uploaded/progressBarRef.current[fileName].total)*100);
-            progressBarRef.current[fileName].percentUploaded = currentProgressInPercentage;
+            setProgressBar((prevProgress) => {
 
-            setProgressBar(progressBarRef.current);
+                return prevProgress.map((item) => {
+                    if(item.key === origPath) {
+                        return {...item, uploaded: currentTotalUploaded};
+                    }
+                    else {
+                        return item;
+                    }
+                })
+            })
 
-            console.log(currentProgressInPercentage + "% uploaded");
         }
 
-        xhr.send(versions.current[index].imageBlob);
+        xhr.send(versions.current[origPath][index].imageBlob);
     }
 
     async function addImage(image) {
 
         const fileInfo = getFileInfo(image);
-        progressBarRef.current[fileInfo.fileName] = {uploaded: 0, total: 0};
+        progressBarRef.current[fileInfo.origPath] = {uploaded: 0, total: 0};
 
-        const size = {};
-        size.total = 0;
-
-        versions.current = [
+        versions.current[fileInfo.origPath] = [
             {
-                title: "fullsize", 
+                title: "fullsize",
                 fileName: fileInfo.fileName,
                 width: null, 
                 mimeType: fileInfo.mimeType, 
-                key: `${fileInfo.folderPath}/${fileInfo.fileName}`, 
+                key: `${fileInfo.origPath}`, 
                 sizeTotal: 0, 
                 sizeUploaded: 0
             },
@@ -132,7 +141,7 @@ export default function MediaUploadForm({ images, setImages, loadedImages = 0, s
                 fileName: fileInfo.fileName,
                 width: null, 
                 mimeType: "image/webp", 
-                key: `${fileInfo.folderPath}/${fileInfo.fileNameNoExt}.webp`, 
+                key: `${fileInfo.webpPath}`,
                 sizeTotal: 0, 
                 sizeUploaded: 0
             },
@@ -141,7 +150,7 @@ export default function MediaUploadForm({ images, setImages, loadedImages = 0, s
                 fileName: fileInfo.fileName, 
                 width: 600, 
                 mimeType: fileInfo.mimeType, 
-                key: `thumbnails/${fileInfo.folderPath}/${fileInfo.fileName}`, 
+                key: `thumbnails/${fileInfo.origPath}`, 
                 sizeTotal: 0, 
                 sizeUploaded: 0
             },
@@ -150,16 +159,16 @@ export default function MediaUploadForm({ images, setImages, loadedImages = 0, s
                 fileName: fileInfo.fileName, 
                 width: 600, 
                 mimeType: "image/webp", 
-                key: `thumbnails/${fileInfo.folderPath}/${fileInfo.fileNameNoExt}.webp`, sizeTotal: 0, 
+                key: `thumbnails/${fileInfo.webpPath}`, 
+                sizeTotal: 0,
                 sizeUploaded: 0
             }
         ];
 
-       const resizePromises = versions.current.map(async (v, i) => {
+       const resizePromises = versions.current[fileInfo.origPath].map(async (v, i) => {
             const imageBlob = await resizeImage(image, v.width, v.mimeType);
-            versions.current[i].imageBlob = imageBlob;
-            versions.current[i].sizeTotal = imageBlob.size;
-            
+            versions.current[fileInfo.origPath][i].imageBlob = imageBlob;
+            versions.current[fileInfo.origPath][i].sizeTotal = imageBlob.size;
         });
 
         await Promise.all(resizePromises);
@@ -171,17 +180,22 @@ export default function MediaUploadForm({ images, setImages, loadedImages = 0, s
          * - could be done above, but just to be more clear, doing it separately
          */
 
-        versions.current.map(async(v) => {
-            progressBarRef.current[fileInfo.fileName].total += v.sizeTotal;
+        let totalSize = 0;
+
+        versions.current[fileInfo.origPath].map(async(v) => {
+
+            totalSize += v.sizeTotal;
+            progressBarRef.current[fileInfo.origPath].total += v.sizeTotal;
         });
 
-        console.log(versions);
+        setProgressBar((prevProgress) => ([
+            ...prevProgress, {key: fileInfo.origPath, uploaded: 0, total: totalSize}
+        ]));
 
-        const uploadPromises = versions.current.map(async (v, i) => {
-            console.log(`uploading ${v.title}`);
+        const uploadPromises = versions.current[fileInfo.origPath].map(async (v, i) => {
             const signedUrl = await getSignedUrl(v.key, v.mimeType);
-            versions.current[i].signedUrl = signedUrl;
-            uploadImageObject(i);
+            versions.current[fileInfo.origPath][i].signedUrl = signedUrl;
+            uploadImageObject(fileInfo.origPath, i);
         });
 
         await Promise.all(uploadPromises);
@@ -206,8 +220,6 @@ export default function MediaUploadForm({ images, setImages, loadedImages = 0, s
             method: 'POST',
             body: JSON.stringify({origPath: `${fileInfo.folderPath}/${fileInfo.fileName}`, webpPath: `${fileInfo.folderPath}/${fileInfo.fileNameNoExt}.webp`}),
         });
-
-        console.log(await res.json())
 
         return;
 
@@ -266,6 +278,16 @@ export default function MediaUploadForm({ images, setImages, loadedImages = 0, s
 
                     }
                 </div>
+            }
+            { 
+                <div className="progressBar">
+                    {progressBar.map((p,i) => (
+                        <div key={p.key}>
+                            uploading {p.key} - { parseInt((p.uploaded/p.total)*100)}% complete
+                        </div>
+                    ))}
+                </div>
+                
             }
         </>
     )
