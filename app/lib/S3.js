@@ -20,13 +20,13 @@ const S3Client = new S3({
     }
 });
 
-export async function generateSignedUrl({name, type}) {
+export async function generateSignedUrl({key, mimeType}) {
 
     const bucketParams = {
         Bucket: spaces_bucket,
-        Key: name,
+        Key: key,
         ACL: "public-read",
-        ContentType: type
+        ContentType: mimeType
     }
     const command = new PutObjectCommand(bucketParams);
 

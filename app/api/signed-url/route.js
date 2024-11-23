@@ -7,7 +7,7 @@ export async function POST(request) {
 
     const fileData = await request.json();
 
-    if(!fileData?.name || !fileData?.type) {
+    if(!fileData?.key || !fileData?.mimeType) {
         return NextResponse.json({message: "invalid request"});
     }
 
