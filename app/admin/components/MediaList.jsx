@@ -123,8 +123,28 @@ export default function MediaList() {
 
                             return (
                                 <tr key={m._id}>
-                                    <td>
-                                        <img src={`https://garden-store.blr1.cdn.digitaloceanspaces.com/${m.webpPath}`} alt="" className="w-20 h-20 rounded-md object-cover" />
+                                    <td className="relative">
+                                        <div className="relative w-28 h-28">
+                                            <div className="absolute inset-0 w-full h-full bg-slate-600/50">
+                                                <svg width="112" height="112" viewBox="-25 -25 150 150">
+                                                    <circle
+                                                        cx="50"
+                                                        cy="50"
+                                                        r="50"
+                                                        fill="none"
+                                                        stroke="rgb(52 211 153)"
+                                                        strokeWidth={6}
+                                                        strokeLinecap="round"
+                                                        strokeDasharray={`125.6,188.4`}
+                                                        strokeDashoffset={`78.5`}
+                                                    />
+                                                </svg>
+                                                <div className="absolute flex justify-center items-center inset-0 w-full h-full">40%</div>
+                                            </div>
+                                            <img src={`https://garden-store.blr1.cdn.digitaloceanspaces.com/${m.webpPath}`} alt="" className="w-28 h-28 rounded-md object-cover" />
+                                        </div>
+
+
                                     </td>
                                     <td>
                                         {m._id}
