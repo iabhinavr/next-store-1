@@ -3,15 +3,13 @@
 import { useEffect, useRef, useState } from "react";
 import { getImagePreview, resizeImage } from "@/app/lib/image";
 
-export default function MediaUploadForm({ progressBar, setProgressBar, images, setImages, loadedImages = 0, setLoadedImages = false }) {
+export default function MediaUploadForm({ progressBar, setProgressBar, images, setImages }) {
 
-    const [uploadedFile, setUploadedFile] = useState(false);
     const [uploadStatus, setUploadStatus] = useState(false);
     const [uploadMessage, setUploadMessage] = useState('');
     const [statusColor, setStatusColor] = useState('');
 
     const versions = useRef([]);
-    const progressBarRef = useRef([]);
 
     useEffect(() => {
         console.log('progressBar changed');
@@ -119,8 +117,6 @@ export default function MediaUploadForm({ progressBar, setProgressBar, images, s
         }
         const imagePreview = await getImagePreview(image);
 
-        progressBarRef.current[fileInfo.origPath] = { uploaded: 0, total: 0 };
-
         versions.current[fileInfo.origPath] = [
             {
                 title: "fullsize",
@@ -182,9 +178,7 @@ export default function MediaUploadForm({ progressBar, setProgressBar, images, s
         let totalSize = 0;
 
         versions.current[fileInfo.origPath].map(async (v) => {
-
             totalSize += v.sizeTotal;
-            progressBarRef.current[fileInfo.origPath].total += v.sizeTotal;
         });
 
         setProgressBar((prevProgress) => {
